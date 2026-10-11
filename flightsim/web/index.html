@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flight Sim</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <main class="cockpit">
+        <header class="topbar">
+            <div class="brand"><span class="brand-mark">✈</span><span><strong>FLIGHT SIM</strong><small>FS-042 /
+                        TRAINING SORTIE</small></span></div>
+            <button id="back" class="icon-button" type="button" title="Return to the ActivityHub menu">EXIT</button>
+        </header>
+
+        <section class="flight-strip" aria-label="Flight status">
+            <div><span>MISSION</span><strong>RUNWAY 27</strong></div>
+            <div><span>PHASE</span><strong id="phase">PREFLIGHT</strong></div>
+            <div><span>LIVE TRAFFIC</span><strong id="traffic-count">-- AC</strong></div>
+            <div><span>SCORE</span><strong id="score">00000</strong></div>
+            <div><span>BEST</span><strong id="best">00000</strong></div>
+        </section>
+
+        <section class="sim-layout">
+            <div class="viewport-frame">
+                <canvas id="game" aria-label="Flight simulator view"></canvas>
+                <div class="reticle"></div>
+                <div class="view-label">CAM 01 / FORWARD</div>
+                <div id="start-panel" class="overlay">
+                    <p class="kicker">ATC CLEARANCE RECEIVED</p>
+                    <h1>Take the controls.</h1>
+                    <p>Lift off, maintain a steady climb, then bring the aircraft home on the runway. Keep the nose
+                        centered with <kbd>A</kbd> <kbd>D</kbd> or <kbd>←</kbd> <kbd>→</kbd>.</p>
+                    <button id="start" class="primary-button" type="button">START FLIGHT</button>
+                </div>
+                <div id="end-panel" class="overlay hidden">
+                    <p class="kicker">FLIGHT REPORT</p>
+                    <h1 id="result-title">Landed safely.</h1>
+                    <p id="result-copy">Your sortie score is ready.</p>
+                    <button id="again" class="primary-button" type="button">FLY AGAIN</button>
+                </div>
+            </div>
+
+            <aside class="instruments" aria-label="Flight instruments">
+                <div class="instrument"><span class="instrument-label">ALTITUDE</span><strong><b
+                            id="altitude">0000</b><small> FT</small></strong>
+                    <div class="meter"><i id="altitude-meter"></i></div>
+                </div>
+                <div class="instrument"><span class="instrument-label">AIRSPEED</span><strong><b
+                            id="speed">000</b><small> KTS</small></strong>
+                    <div class="meter"><i id="speed-meter"></i></div>
+                </div>
+                <div class="instrument"><span class="instrument-label">FUEL</span><strong><b id="fuel">100</b><small>
+                            %</small></strong>
+                    <div class="meter"><i id="fuel-meter"></i></div>
+                </div>
+                <div class="compass"><span>N</span><span>E</span><span>S</span><span>W</span><i id="heading">090°</i>
+                </div>
+                <div class="traffic-radar"><span>NEARBY AIRCRAFT</span><canvas id="radar" width="120"
+                        height="78"></canvas></div>
+                <p id="traffic-detail" class="traffic-detail">NO CONTACT SELECTED</p>
+                <p id="status" class="status">Systems nominal. Awaiting pilot.</p>
+            </aside>
+        </section>
+
+        <footer><span>ARROWS / A D TO STEER</span><span id="timer">SORTIE 60.0</span><span>VISIBILITY 10 KM</span>
+        </footer>
+    </main>
+    <script type="module" src="game.js"></script>
+</body>
+
+</html>

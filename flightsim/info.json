@@ -1,0 +1,17 @@
+{
+    "author": [
+        "ActivityHub community"
+    ],
+    "short": "Fly a jet, manage your instruments, and land safely.",
+    "description": "Flight Sim is a cockpit-inspired ActivityHub game about taking off, cruising, and landing on a runway.",
+    "end_user_data_statement": "This cog stores the best flight score submitted by each player.",
+    "install_msg": "Flight Sim needs the ActivityHub cog to be loaded first.",
+    "requirements": [],
+    "tags": [
+        "activityhub",
+        "games",
+        "flight",
+        "simulator"
+    ],
+    "type": "COG"
+}
