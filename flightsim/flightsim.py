@@ -2,7 +2,6 @@ import asyncio
 import json
 import time
 from pathlib import Path
-from urllib.parse import urlencode
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -41,16 +40,17 @@ class FlightSim(commands.Cog):
             if not api_key:
                 result = {"configured": False, "aircraft": []}
             else:
-                query = urlencode({"circle": "38.84916,-77.04138,40"})
                 request = Request(
-                    f"https://rest.api.airplanes.live/?{query}",
-                    headers={"auth": api_key, "User-Agent": "ActivityHub Flight Sim"},
+                    "https://rest.api.airplanes.live/?circle=38.84916,-77.04138,40",
+                    headers={"User-Agent": "ActivityHub Flight Sim"},
                 )
+                request.add_header("auth", api_key)
                 try:
                     payload = await asyncio.to_thread(self._request_traffic, request)
                     result = {"configured": True, "aircraft": self._normalise_aircraft(payload)}
                 except HTTPError as error:
-                    result = {"configured": True, "aircraft": [], "error": f"Airplanes.Live rejected the request ({error.code}). Use [p]flightsimkey to replace the key."}
+                    detail = self._http_error_detail(error)
+                    result = {"configured": True, "aircraft": [], "error": f"Airplanes.Live rejected the request ({error.code}): {detail}"}
                 except (URLError, OSError, ValueError, json.JSONDecodeError):
                     result = {"configured": True, "aircraft": [], "error": "Airplanes.Live could not be reached."}
 
@@ -113,6 +113,18 @@ class FlightSim(commands.Cog):
     def _request_traffic(request: Request) -> dict:
         with urlopen(request, timeout=8) as response:
             return json.load(response)
+
+    @staticmethod
+    def _http_error_detail(error: HTTPError) -> str:
+        try:
+            body = error.read(512).decode("utf-8", errors="replace")
+            payload = json.loads(body)
+            detail = payload.get("message") or payload.get("error") or payload.get("msg")
+            if detail:
+                return str(detail)[:160]
+        except (OSError, UnicodeDecodeError, ValueError):
+            pass
+        return "check the API key and query format"
 
     async def submit_score(self, ctx, data: dict) -> dict:
         try:
