@@ -87,6 +87,7 @@ async function refreshTraffic() {
     } catch (error) {
         trafficCount.textContent = 'ERROR';
         statusLabel.textContent = `Traffic service error: ${error.message || 'ActivityHub request failed.'}`;
+        trafficDetail.textContent = 'CHECK BOT CONSOLE / API KEY';
     }
 }
 

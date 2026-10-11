@@ -50,7 +50,7 @@ class FlightSim(commands.Cog):
                     payload = await asyncio.to_thread(self._request_traffic, request)
                     result = {"configured": True, "aircraft": self._normalise_aircraft(payload)}
                 except HTTPError as error:
-                    result = {"configured": True, "aircraft": [], "error": f"Airplanes.Live rejected the request ({error.code})."}
+                    result = {"configured": True, "aircraft": [], "error": f"Airplanes.Live rejected the request ({error.code}). Use [p]flightsimkey to replace the key."}
                 except (URLError, OSError, ValueError, json.JSONDecodeError):
                     result = {"configured": True, "aircraft": [], "error": "Airplanes.Live could not be reached."}
 
@@ -93,7 +93,21 @@ class FlightSim(commands.Cog):
         await self.config.api_key.set(key)
         self._traffic_cache = None
         self._traffic_cache_expires = 0.0
-        await ctx.send("Flight Sim Airplanes.Live key saved. The next traffic request will refresh the cache.")
+        await ctx.send("Flight Sim Airplanes.Live key saved. Run [p]flightsimtest to verify it.")
+
+    @commands.command(name="flightsimtest")
+    @commands.is_owner()
+    async def flightsimtest(self, ctx):
+        """Test the configured Airplanes.Live key and report the result."""
+        self._traffic_cache = None
+        self._traffic_cache_expires = 0.0
+        result = await self.get_traffic(ctx, {})
+        if result.get("error"):
+            await ctx.send(f"Flight Sim traffic test failed: {result['error']}")
+        elif not result.get("configured"):
+            await ctx.send("Flight Sim traffic test skipped: no API key is configured.")
+        else:
+            await ctx.send(f"Flight Sim traffic test passed: {len(result['aircraft'])} aircraft returned.")
 
     @staticmethod
     def _request_traffic(request: Request) -> dict:
