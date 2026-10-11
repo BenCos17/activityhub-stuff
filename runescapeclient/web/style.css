@@ -218,12 +218,14 @@ nav {
 }
 
 .primary-button {
+    display: inline-block;
     border: 0;
     padding: 12px 17px;
     background: var(--gold);
     color: #211a0d;
     cursor: pointer;
     font: 600 12px Consolas, monospace;
+    text-decoration: none;
 }
 
 .primary-button:hover {

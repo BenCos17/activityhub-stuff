@@ -1,4 +1,3 @@
-const officialRuneScapeHome = 'https://www.runescape.com/';
 const playerNameKey = 'runescape-companion-player-name';
 
 const connectionState = document.getElementById('connection-state');
@@ -12,7 +11,6 @@ playerName.value = savedName;
 updateNameLabels(savedName);
 
 document.getElementById('login-button').addEventListener('click', () => {
-    window.open(officialRuneScapeHome, '_blank', 'noopener,noreferrer');
     connectionState.textContent = 'Official site opened';
     loginStatus.textContent = 'Finish signing in on the official RuneScape tab. This page cannot read that session.';
 });
