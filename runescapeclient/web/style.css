@@ -1,0 +1,460 @@
+:root {
+    color-scheme: dark;
+    --bg: #10100f;
+    --panel: #191816;
+    --panel-2: #211f1b;
+    --line: #38332b;
+    --text: #eee9dd;
+    --muted: #9d9587;
+    --gold: #e7b968;
+    --gold-bright: #f7d993;
+    --green: #80c58c;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Georgia, 'Times New Roman', serif;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    opacity: .22;
+    background-image: linear-gradient(rgba(231, 185, 104, .07) 1px, transparent 1px), linear-gradient(90deg, rgba(231, 185, 104, .07) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
+button,
+input {
+    font: inherit;
+}
+
+button,
+a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.app-shell {
+    display: grid;
+    grid-template-columns: 214px 1fr;
+    width: min(1280px, 100%);
+    min-height: 100vh;
+    margin: auto;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    padding: 34px 24px;
+    border-right: 1px solid var(--line);
+    background: rgba(16, 16, 15, .72);
+}
+
+.brand-mark {
+    color: var(--gold-bright);
+    font: 700 25px Georgia, serif;
+    letter-spacing: -3px;
+}
+
+.brand-mark span {
+    color: var(--muted);
+    padding: 0 3px;
+}
+
+.sidebar-label,
+.kicker {
+    margin: 0;
+    color: var(--gold);
+    font: 10px Consolas, monospace;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+}
+
+.sidebar-label {
+    margin: 56px 0 20px;
+    color: var(--muted);
+}
+
+nav {
+    display: grid;
+    gap: 5px;
+}
+
+.nav-item {
+    padding: 12px 8px;
+    border: 0;
+    border-left: 2px solid transparent;
+    background: none;
+    color: var(--muted);
+    text-align: left;
+    cursor: pointer;
+}
+
+.nav-item span {
+    margin-right: 12px;
+    color: #625b4e;
+    font: 10px Consolas, monospace;
+}
+
+.nav-item.active,
+.nav-item:hover {
+    border-left-color: var(--gold);
+    color: var(--text);
+    background: rgba(231, 185, 104, .06);
+}
+
+.sidebar-foot {
+    margin-top: auto;
+    color: #655f54;
+    font: 10px/1.6 Consolas, monospace;
+    text-transform: uppercase;
+}
+
+.content {
+    width: min(100%, 1020px);
+    padding: 52px clamp(26px, 6vw, 82px) 30px;
+}
+
+.topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.topbar h1 {
+    max-width: 650px;
+    margin: 14px 0 0;
+    font-size: clamp(2.7rem, 6vw, 5.4rem);
+    font-weight: 400;
+    line-height: .94;
+    letter-spacing: -3px;
+}
+
+.connection-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    padding: 8px 11px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font: 10px Consolas, monospace;
+    text-transform: uppercase;
+}
+
+.connection-pill i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 12px var(--green);
+}
+
+.notice {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 45px 0 34px;
+    padding: 13px 16px;
+    border: 1px solid #3b352a;
+    background: rgba(231, 185, 104, .05);
+    color: #beb5a4;
+    font: 12px/1.45 Consolas, monospace;
+}
+
+.notice p {
+    margin: 0;
+}
+
+.notice-icon {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    color: var(--gold);
+    font: 12px Georgia, serif;
+}
+
+.hero-panel {
+    display: flex;
+    justify-content: space-between;
+    min-height: 325px;
+    padding: 42px 48px;
+    border: 1px solid var(--line);
+    background: radial-gradient(circle at 83% 48%, rgba(231, 185, 104, .14), transparent 28%), var(--panel);
+}
+
+.hero-panel h2 {
+    margin: 17px 0;
+    font-size: clamp(2.4rem, 5vw, 4.5rem);
+    font-weight: 400;
+    line-height: .95;
+    letter-spacing: -2px;
+}
+
+.hero-panel h2 em {
+    color: var(--gold-bright);
+    font-style: normal;
+}
+
+.hero-copy {
+    max-width: 380px;
+    margin: 0 0 24px;
+    color: var(--muted);
+    font: 13px/1.6 Consolas, monospace;
+}
+
+.primary-button {
+    border: 0;
+    padding: 12px 17px;
+    background: var(--gold);
+    color: #211a0d;
+    cursor: pointer;
+    font: 600 12px Consolas, monospace;
+}
+
+.primary-button:hover {
+    background: var(--gold-bright);
+}
+
+.primary-button span {
+    padding-left: 14px;
+    font-size: 16px;
+}
+
+.microcopy {
+    color: #736c60;
+    font: 10px Consolas, monospace;
+}
+
+.sigil {
+    align-self: center;
+    display: grid;
+    place-items: center;
+    width: 190px;
+    height: 190px;
+    border: 1px solid rgba(231, 185, 104, .4);
+    border-radius: 50%;
+    transform: rotate(45deg);
+}
+
+.sigil-ring {
+    position: absolute;
+    width: 145px;
+    height: 145px;
+    border: 1px solid rgba(231, 185, 104, .55);
+    border-radius: 50%;
+}
+
+.sigil-core {
+    color: var(--gold-bright);
+    font-size: 75px;
+    transform: rotate(-45deg);
+    text-shadow: 0 0 28px rgba(231, 185, 104, .5);
+}
+
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 42px 0 15px;
+}
+
+.section-heading>span {
+    color: #655f54;
+    font: 10px Consolas, monospace;
+    text-transform: uppercase;
+}
+
+.shortcut-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.shortcut {
+    display: block;
+    min-height: 125px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.shortcut:hover {
+    border-color: var(--gold);
+    background: var(--panel-2);
+}
+
+.shortcut-icon {
+    display: block;
+    margin-bottom: 18px;
+    color: var(--gold);
+    font-size: 20px;
+}
+
+.shortcut strong,
+.shortcut small {
+    display: block;
+}
+
+.shortcut strong {
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.shortcut small {
+    margin-top: 6px;
+    color: var(--muted);
+    font: 10px Consolas, monospace;
+}
+
+.view[hidden] {
+    display: none;
+}
+
+.identity-panel {
+    max-width: 660px;
+    padding: 42px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+}
+
+.identity-panel h2 {
+    margin: 0 0 12px;
+    font-size: 36px;
+    font-weight: 400;
+}
+
+.identity-panel p {
+    color: var(--muted);
+    font: 12px/1.6 Consolas, monospace;
+}
+
+.identity-panel label {
+    display: block;
+    margin: 30px 0 9px;
+    color: var(--gold);
+    font: 10px Consolas, monospace;
+    text-transform: uppercase;
+}
+
+.input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.input-row input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--line);
+    outline: 0;
+    background: #111110;
+    color: var(--text);
+}
+
+.input-row input:focus {
+    border-color: var(--gold);
+}
+
+footer {
+    margin-top: 65px;
+    color: #5d574d;
+    font: 10px Consolas, monospace;
+}
+
+@media (max-width: 700px) {
+    .app-shell {
+        display: block;
+    }
+
+    .sidebar {
+        display: block;
+        padding: 20px 18px 0;
+        border-right: 0;
+    }
+
+    .sidebar-label,
+    .sidebar-foot {
+        display: none;
+    }
+
+    nav {
+        display: flex;
+        margin-top: 24px;
+        overflow-x: auto;
+    }
+
+    .nav-item {
+        white-space: nowrap;
+    }
+
+    .content {
+        padding: 36px 18px 24px;
+    }
+
+    .topbar {
+        display: block;
+    }
+
+    .connection-pill {
+        display: inline-flex;
+        margin-top: 20px;
+    }
+
+    .notice {
+        margin-top: 32px;
+    }
+
+    .hero-panel {
+        min-height: 390px;
+        padding: 30px 24px;
+    }
+
+    .sigil {
+        width: 100px;
+        height: 100px;
+    }
+
+    .sigil-ring {
+        width: 76px;
+        height: 76px;
+    }
+
+    .sigil-core {
+        font-size: 42px;
+    }
+
+    .shortcut-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .shortcut {
+        min-height: 90px;
+    }
+
+    .shortcut-icon {
+        display: inline-block;
+        margin: 0 12px 0 0;
+    }
+
+    .identity-panel {
+        padding: 26px 20px;
+    }
+}
