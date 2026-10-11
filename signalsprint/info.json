@@ -1,0 +1,16 @@
+{
+    "author": [
+        "ActivityHub community"
+    ],
+    "short": "Dodge the interference and keep the signal alive.",
+    "description": "Signal Sprint is a fast arcade ActivityHub game about steering a beacon through falling interference.",
+    "end_user_data_statement": "This cog stores the best score submitted by each player.",
+    "install_msg": "Signal Sprint needs the ActivityHub cog to be loaded first.",
+    "requirements": [],
+    "tags": [
+        "activityhub",
+        "games",
+        "arcade"
+    ],
+    "type": "COG"
+}

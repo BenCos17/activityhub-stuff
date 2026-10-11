@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Signal Sprint</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <main class="shell">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">ACTIVITYHUB / ARCADE 01</p>
+                <h1>Signal Sprint</h1>
+            </div>
+            <button id="back" class="quiet-button" type="button" title="Return to the ActivityHub menu">Exit</button>
+        </header>
+
+        <section class="hud" aria-label="Game status">
+            <div><span>Signal</span><strong id="score">0000</strong></div>
+            <div><span>Best</span><strong id="best">0000</strong></div>
+            <div><span>Time</span><strong id="time">30.0</strong></div>
+        </section>
+
+        <section class="game-frame">
+            <canvas id="game" aria-label="Signal Sprint game board"></canvas>
+            <div id="start-panel" class="overlay">
+                <p class="eyebrow">STAY IN THE BEAM</p>
+                <h2>Keep the signal alive.</h2>
+                <p>Move with <kbd>A</kbd> <kbd>D</kbd> or <kbd>←</kbd> <kbd>→</kbd>. Dodge the interference for 30
+                    seconds.</p>
+                <button id="start" class="primary-button" type="button">Start run</button>
+            </div>
+            <div id="end-panel" class="overlay hidden">
+                <p class="eyebrow">TRANSMISSION COMPLETE</p>
+                <h2 id="result-title">Clean signal.</h2>
+                <p id="result-copy">Your score is ready to transmit.</p>
+                <button id="again" class="primary-button" type="button">Run it back</button>
+            </div>
+        </section>
+
+        <footer><span id="status">Ready when you are.</span><span>30 seconds / one clean signal</span></footer>
+    </main>
+    <script type="module" src="game.js"></script>
+</body>
+
+</html>
