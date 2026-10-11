@@ -3,6 +3,7 @@ import json
 import time
 from pathlib import Path
 from urllib.parse import urlencode
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from redbot.core import Config, commands
@@ -40,7 +41,7 @@ class FlightSim(commands.Cog):
             if not api_key:
                 result = {"configured": False, "aircraft": []}
             else:
-                query = urlencode({"circle": "38.84916,-77.04138,40", "filter_with_pos": "", "jv2": ""})
+                query = urlencode({"circle": "38.84916,-77.04138,40"})
                 request = Request(
                     f"https://rest.api.airplanes.live/?{query}",
                     headers={"auth": api_key, "User-Agent": "ActivityHub Flight Sim"},
@@ -48,8 +49,10 @@ class FlightSim(commands.Cog):
                 try:
                     payload = await asyncio.to_thread(self._request_traffic, request)
                     result = {"configured": True, "aircraft": self._normalise_aircraft(payload)}
-                except (OSError, ValueError, json.JSONDecodeError):
-                    result = {"configured": True, "aircraft": [], "error": "Live traffic is temporarily unavailable."}
+                except HTTPError as error:
+                    result = {"configured": True, "aircraft": [], "error": f"Airplanes.Live rejected the request ({error.code})."}
+                except (URLError, OSError, ValueError, json.JSONDecodeError):
+                    result = {"configured": True, "aircraft": [], "error": "Airplanes.Live could not be reached."}
 
             self._traffic_cache = result
             self._traffic_cache_expires = time.monotonic() + 15
@@ -57,6 +60,8 @@ class FlightSim(commands.Cog):
 
     @staticmethod
     def _normalise_aircraft(payload: dict) -> list[dict]:
+        if not isinstance(payload, dict) or not isinstance(payload.get("aircraft"), list):
+            raise ValueError("Airplanes.Live returned an unexpected response.")
         aircraft = []
         for item in payload.get("aircraft", []):
             if item.get("lat") is None or item.get("lon") is None:

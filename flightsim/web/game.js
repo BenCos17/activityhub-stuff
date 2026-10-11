@@ -66,15 +66,27 @@ function startGame() {
 }
 
 async function refreshTraffic() {
-    if (!hub || hub.offline) return;
+    if (!hub || hub.offline) {
+        trafficCount.textContent = 'PREVIEW';
+        statusLabel.textContent = 'Live traffic is available inside Discord.';
+        return;
+    }
     try {
         const result = await hub.api('get_traffic', {});
         liveTraffic = result.aircraft || [];
         trafficCount.textContent = result.configured ? `${String(liveTraffic.length).padStart(2, '0')} AC` : 'OFFLINE';
         updateTrafficDetail();
-        if (result.error) statusLabel.textContent = result.error;
+        if (result.error) {
+            trafficCount.textContent = 'ERROR';
+            statusLabel.textContent = result.error;
+        } else if (!result.configured) {
+            statusLabel.textContent = 'Owner has not configured Airplanes.Live.';
+        } else {
+            statusLabel.textContent = liveTraffic.length ? 'Traffic feed current.' : 'No aircraft in the 40 NM area.';
+        }
     } catch (error) {
-        trafficCount.textContent = 'NO DATA';
+        trafficCount.textContent = 'ERROR';
+        statusLabel.textContent = `Traffic service error: ${error.message || 'ActivityHub request failed.'}`;
     }
 }
 
