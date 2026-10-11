@@ -164,16 +164,80 @@ function draw(width, height, elapsed) {
     const sky = ctx.createLinearGradient(0, 0, 0, height);
     sky.addColorStop(0, '#193e57'); sky.addColorStop(.62, '#6a9b9d'); sky.addColorStop(.63, '#293b38'); sky.addColorStop(1, '#111e20');
     ctx.fillStyle = sky; ctx.fillRect(0, 0, width, height);
-    ctx.strokeStyle = 'rgba(224, 243, 235, .2)'; ctx.lineWidth = 1;
-    for (let y = horizon + 30; y < height; y += 34 + (y - horizon) * .1) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke(); }
-    for (let x = -width; x < width * 2; x += 90) { ctx.beginPath(); ctx.moveTo(width / 2 + (x - width / 2) * .08, horizon); ctx.lineTo(x, height); ctx.stroke(); }
-    ctx.fillStyle = 'rgba(236, 247, 240, .33)';
+    drawTerrain(width, height, horizon, elapsed);
+    ctx.fillStyle = 'rgba(236, 247, 240, .28)';
     run.clouds.forEach((cloud) => { ctx.beginPath(); ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2); ctx.fill(); });
     const runwayWidth = Math.max(30, width * (.06 + (1 - run.altitude / 12000) * .7));
     ctx.fillStyle = '#202c2e'; ctx.beginPath(); ctx.moveTo(width / 2 - runwayWidth, height); ctx.lineTo(width / 2 + runwayWidth, height); ctx.lineTo(width / 2 + 4, horizon + 25); ctx.lineTo(width / 2 - 4, horizon + 25); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = '#f3ca62'; ctx.setLineDash([18, 14]); ctx.beginPath(); ctx.moveTo(width / 2, horizon + 28); ctx.lineTo(width / 2, height); ctx.stroke(); ctx.setLineDash([]);
     ctx.strokeStyle = 'rgba(107, 213, 210, .75)'; ctx.beginPath(); ctx.moveTo(width / 2 - 20, height - 44); ctx.lineTo(width / 2 + 20, height - 44); ctx.moveTo(width / 2, height - 54); ctx.lineTo(width / 2, height - 34); ctx.stroke();
     drawLiveTraffic(width, height);
+}
+
+function drawTerrain(width, height, horizon, elapsed) {
+    const ground = ctx.createLinearGradient(0, horizon, 0, height);
+    ground.addColorStop(0, '#6d9590');
+    ground.addColorStop(.2, '#527d69');
+    ground.addColorStop(1, '#1d382f');
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, horizon, width, height - horizon);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, horizon, width, height - horizon);
+    ctx.clip();
+
+    const drift = (elapsed * 7) % 150;
+    const fields = [
+        ['#507c5c', -180, 72, 310, 120, -0.08], ['#668a56', 150, 70, 270, 145, 0.12],
+        ['#8e955d', 420, 66, 260, 125, -0.04], ['#3e725f', -280, 205, 410, 170, 0.08],
+        ['#8a8752', 210, 220, 330, 190, -0.12], ['#4d7956', 610, 185, 340, 210, 0.05],
+        ['#6f8750', -120, 385, 360, 230, -0.1], ['#a18f57', 260, 405, 420, 250, 0.09],
+        ['#3e684e', 650, 390, 410, 260, -0.06]
+    ];
+    fields.forEach(([color, x, y, fieldWidth, fieldHeight, angle]) => {
+        ctx.save();
+        ctx.translate(x + width / 2 - 440, horizon + y - drift * .16);
+        ctx.rotate(angle);
+        ctx.fillStyle = color;
+        ctx.fillRect(-fieldWidth / 2, -fieldHeight / 2, fieldWidth, fieldHeight);
+        ctx.strokeStyle = 'rgba(230, 215, 145, .14)';
+        ctx.lineWidth = 2;
+        for (let row = -fieldHeight / 2; row < fieldHeight / 2; row += 12) {
+            ctx.beginPath(); ctx.moveTo(-fieldWidth / 2, row); ctx.lineTo(fieldWidth / 2, row); ctx.stroke();
+        }
+        ctx.restore();
+    });
+
+    ctx.strokeStyle = 'rgba(232, 230, 192, .62)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-30, height * .93); ctx.bezierCurveTo(width * .2, height * .64, width * .56, height * .86, width + 35, horizon + 55);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255, 248, 202, .2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(width * .04, height); ctx.bezierCurveTo(width * .27, height * .72, width * .59, height * .91, width * .96, horizon + 35);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(48, 68, 54, .85)';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(-40, horizon + 80); ctx.bezierCurveTo(width * .28, horizon + 125, width * .63, horizon + 42, width + 30, horizon + 105);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(184, 198, 157, .5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    for (let x = -30; x < width + 40; x += 24) {
+        const treeY = horizon + 86 + Math.sin(x * .04) * 14;
+        ctx.fillStyle = '#214b42';
+        ctx.beginPath(); ctx.arc(x, treeY, 8, 0, Math.PI * 2); ctx.fill();
+    }
+
+    ctx.fillStyle = 'rgba(237, 244, 226, .18)';
+    ctx.fillRect(0, horizon, width, 18);
+    ctx.restore();
 }
 
 function drawLiveTraffic(width, height) {
