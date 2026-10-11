@@ -5,12 +5,25 @@ const loginStatus = document.getElementById('login-status');
 const playerName = document.getElementById('player-name');
 const savedNameLabel = document.getElementById('saved-name-label');
 const identityStatus = document.getElementById('identity-status');
+const loginButton = document.getElementById('login-button');
+
+let hub = null;
+try {
+    const activityhub = await import('activityhub');
+    hub = await activityhub.connect();
+} catch {
+    // The standalone browser preview has no ActivityHub module.
+}
 
 const savedName = localStorage.getItem(playerNameKey) || '';
 playerName.value = savedName;
 updateNameLabels(savedName);
 
-document.getElementById('login-button').addEventListener('click', () => {
+loginButton.addEventListener('click', async (event) => {
+    if (hub && !hub.offline && hub.discord?.commands?.openExternalLink) {
+        event.preventDefault();
+        await hub.discord.commands.openExternalLink({ url: loginButton.href });
+    }
     connectionState.textContent = 'Official site opened';
     loginStatus.textContent = 'Finish signing in on the official RuneScape tab. This page cannot read that session.';
 });
