@@ -8,7 +8,7 @@ class SignalSprint(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=8472319054, force_registration=True)
+        self.config = Config.get_conf(self, identifier=492089091320446976, force_registration=True)
         self.config.register_member(best_score=0)
 
     async def activityhub_game(self) -> dict:
