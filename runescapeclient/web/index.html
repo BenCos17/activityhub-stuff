@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A RuneScape companion client with official login handoff." />
+    <title>RuneScape Companion</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand-mark">R<span>/</span>C</div>
+            <p class="sidebar-label">Companion</p>
+            <nav aria-label="Main navigation">
+                <button class="nav-item active" type="button" data-view="overview"><span>01</span> Overview</button>
+                <button class="nav-item" type="button" data-view="identity"><span>02</span> Player identity</button>
+            </nav>
+            <div class="sidebar-foot">Unofficial companion<br />Uses official login only</div>
+        </aside>
+
+        <main class="content">
+            <header class="topbar">
+                <div>
+                    <p class="kicker">RUNESCAPE / COMPANION CLIENT</p>
+                    <h1>Welcome back to Gielinor.</h1>
+                </div>
+                <div class="connection-pill"><i></i><span id="connection-state">Not connected</span></div>
+            </header>
+
+            <section class="notice" role="note">
+                <span class="notice-icon">!</span>
+                <p>Authentication stays on the official RuneScape website. This companion never asks for or stores your
+                    password.</p>
+            </section>
+
+            <section id="overview" class="view active-view">
+                <div class="hero-panel">
+                    <div>
+                        <p class="kicker">OFFICIAL HANDOFF</p>
+                        <h2>Start with a<br /><em>secure sign-in.</em></h2>
+                        <p class="hero-copy">Open RuneScape's own login page in a separate tab. Return here when you are
+                            done.</p>
+                        <button id="login-button" class="primary-button" type="button">Open official login
+                            <span>↗</span></button>
+                        <p id="login-status" class="microcopy">No account details are handled here.</p>
+                    </div>
+                    <div class="sigil" aria-hidden="true">
+                        <div class="sigil-ring"></div>
+                        <div class="sigil-core">R</div>
+                    </div>
+                </div>
+
+                <div class="section-heading">
+                    <p class="kicker">QUICK ACCESS</p><span>Local only</span>
+                </div>
+                <div class="shortcut-grid">
+                    <a class="shortcut" href="https://www.runescape.com/" target="_blank"
+                        rel="noopener noreferrer"><span class="shortcut-icon">↗</span><strong>RuneScape
+                            home</strong><small>Official game site</small></a>
+                    <a class="shortcut" href="https://secure.runescape.com/m=account-creation/password" target="_blank"
+                        rel="noopener noreferrer"><span class="shortcut-icon">+</span><strong>Create
+                            account</strong><small>Official account page</small></a>
+                    <button id="copy-name" class="shortcut" type="button"><span
+                            class="shortcut-icon">□</span><strong>Copy player name</strong><small
+                            id="saved-name-label">Not set</small></button>
+                </div>
+            </section>
+
+            <section id="identity" class="view" hidden>
+                <div class="section-heading">
+                    <p class="kicker">PLAYER IDENTITY</p><span>Stored in this browser</span>
+                </div>
+                <div class="identity-panel">
+                    <h2>Set a display name.</h2>
+                    <p>This is only a local label for your companion. It does not sign you in or verify ownership.</p>
+                    <label for="player-name">RuneScape display name</label>
+                    <div class="input-row"><input id="player-name" type="text" maxlength="30"
+                            placeholder="e.g. Adventurer" autocomplete="off" /><button id="save-name"
+                            class="primary-button" type="button">Save</button></div>
+                    <p id="identity-status" class="microcopy">No name saved.</p>
+                </div>
+            </section>
+
+            <footer>RuneScape is a trademark of Jagex Ltd. This is an independent companion interface.</footer>
+        </main>
+    </div>
+    <script type="module" src="app.js"></script>
+</body>
+
+</html>
