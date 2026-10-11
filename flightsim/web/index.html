@@ -10,66 +10,68 @@
 
 <body>
     <main class="cockpit">
-        <header class="topbar">
-            <div class="brand"><span class="brand-mark">✈</span><span><strong>FLIGHT SIM</strong><small>FS-042 /
-                        TRAINING SORTIE</small></span></div>
-            <button id="back" class="icon-button" type="button" title="Return to the ActivityHub menu">EXIT</button>
-        </header>
-
-        <section class="flight-strip" aria-label="Flight status">
-            <div><span>MISSION</span><strong>RUNWAY 27</strong></div>
-            <div><span>PHASE</span><strong id="phase">PREFLIGHT</strong></div>
-            <div><span>LIVE TRAFFIC</span><strong id="traffic-count">-- AC</strong></div>
-            <div><span>SCORE</span><strong id="score">00000</strong></div>
-            <div><span>BEST</span><strong id="best">00000</strong></div>
-        </section>
-
-        <section class="sim-layout">
-            <div class="viewport-frame">
-                <canvas id="game" aria-label="Flight simulator view"></canvas>
-                <div class="reticle"></div>
-                <div class="view-label">PFD / CAM 01 / FORWARD</div>
-                <div id="start-panel" class="overlay">
-                    <p class="kicker">ATC CLEARANCE RECEIVED</p>
-                    <h1>Take the controls.</h1>
-                    <p>Lift off, maintain a steady climb, then bring the aircraft home on the runway. Keep the nose
-                        centered with <kbd>A</kbd> <kbd>D</kbd> or <kbd>←</kbd> <kbd>→</kbd>.</p>
-                    <button id="start" class="primary-button" type="button">START FLIGHT</button>
-                </div>
-                <div id="end-panel" class="overlay hidden">
-                    <p class="kicker">FLIGHT REPORT</p>
-                    <h1 id="result-title">Landed safely.</h1>
-                    <p id="result-copy">Your sortie score is ready.</p>
-                    <button id="again" class="primary-button" type="button">FLY AGAIN</button>
-                </div>
+        <section class="sim-window">
+            <canvas id="game" aria-label="Flight simulator view"></canvas>
+            <header class="topbar">
+                <div class="brand"><span class="brand-mark">✈</span><span><strong>FLIGHT SIM</strong><small>FS-042 /
+                            TRAINING SORTIE</small></span></div>
+                <div class="top-readout"><span>FLIGHT</span><b id="phase">PREFLIGHT</b><span>TIME</span><b
+                        id="timer">60.0</b></div>
+                <button id="back" class="icon-button" type="button" title="Return to the ActivityHub menu">EXIT</button>
+            </header>
+            <nav class="toolbar" aria-label="Simulator controls">
+                <button class="tool active" type="button" title="Camera view">▣<small>CAMERA</small></button>
+                <button class="tool" type="button" title="Flight instruments">✓</button>
+                <button class="tool" type="button" title="Aircraft systems">⌁</button>
+                <button class="tool" type="button" title="Navigation">◉</button>
+                <button class="tool" type="button" title="Map">⌖</button>
+                <button class="tool" type="button" title="Weather">☁</button>
+                <button class="tool" type="button" title="Settings">⚙</button>
+            </nav>
+            <div class="compass-overlay"><span>N</span><span>E</span><span>S</span><span>W</span><i
+                    id="heading">090°</i></div>
+            <div class="waypoint"><b>RUNWAY 27</b><span>40 NM AREA / <strong id="traffic-count">-- AC</strong></span>
             </div>
-
-            <aside class="instruments" aria-label="Flight instruments">
-                <div class="panel-heading"><span>PRIMARY FLIGHT DATA</span><i>LIVE</i></div>
-                <div class="instrument"><span class="instrument-label">ALTITUDE</span><strong><b
-                            id="altitude">0000</b><small> FT</small></strong>
-                    <div class="meter"><i id="altitude-meter"></i></div>
-                </div>
-                <div class="instrument"><span class="instrument-label">AIRSPEED</span><strong><b
+            <div class="flight-path"><i></i><i></i><i></i></div>
+            <section class="lower-instruments" aria-label="Flight instruments">
+                <div class="gauge airspeed-gauge"><span class="gauge-title">AIRSPEED</span><strong><b
                             id="speed">000</b><small> KTS</small></strong>
-                    <div class="meter"><i id="speed-meter"></i></div>
+                    <div class="arc"></div>
+                    <div class="gauge-ticks">40&nbsp;&nbsp; 80&nbsp;&nbsp; 120&nbsp;&nbsp; 160&nbsp;&nbsp; 200</div>
                 </div>
-                <div class="instrument"><span class="instrument-label">FUEL</span><strong><b id="fuel">100</b><small>
-                            %</small></strong>
-                    <div class="meter"><i id="fuel-meter"></i></div>
+                <div class="engine-stack">
+                    <div class="mini-gauge"><span>ENGINE</span><b id="engine-value">100</b><i><em
+                                id="engine-meter"></em></i></div>
+                    <div class="mini-gauge"><span>FUEL</span><b id="fuel">100</b><i><em id="fuel-meter"></em></i></div>
+                    <div class="mini-gauge"><span>AOA</span><b>+2.0</b><i><em></em></i></div>
                 </div>
-                <div class="compass"><span>N</span><span>E</span><span>S</span><span>W</span><i id="heading">090°</i>
+                <div class="gauge altitude-gauge"><span class="gauge-title">ALTITUDE</span><strong><b
+                            id="altitude">0000</b><small> FEET</small></strong>
+                    <div class="arc"></div>
+                    <div class="gauge-ticks">0&nbsp;&nbsp; 2&nbsp;&nbsp; 4&nbsp;&nbsp; 6&nbsp;&nbsp; 8</div>
                 </div>
-                <div class="panel-heading traffic-heading"><span>TCAS / TRAFFIC</span><i>40 NM</i></div>
-                <div class="traffic-radar"><span>NEARBY AIRCRAFT</span><canvas id="radar" width="120"
-                        height="78"></canvas></div>
-                <p id="traffic-detail" class="traffic-detail">NO CONTACT SELECTED</p>
-                <p id="status" class="status">Systems nominal. Awaiting pilot.</p>
-            </aside>
+                <div class="vertical-gauge"><span>V.SPEED</span><strong>+<b
+                            id="vertical-value">000</b></strong><small>FPM</small></div>
+            </section>
+            <div class="traffic-card"><span>NEARBY AIRCRAFT</span><canvas id="radar" width="120" height="78"></canvas>
+                <p id="traffic-detail">NO CONTACT SELECTED</p>
+            </div>
+            <div class="score-readout"><span>SCORE <b id="score">00000</b></span><span>BEST <b
+                        id="best">00000</b></span></div>
+            <p id="status" class="status">Systems nominal. Awaiting pilot.</p>
+            <div id="start-panel" class="overlay">
+                <p class="kicker">ATC CLEARANCE RECEIVED</p>
+                <h1>Take the controls.</h1>
+                <p>Steer with <kbd>A</kbd> <kbd>D</kbd> or <kbd>←</kbd> <kbd>→</kbd>. Climb, cruise, then land on runway
+                    27.</p><button id="start" class="primary-button" type="button">START FLIGHT</button>
+            </div>
+            <div id="end-panel" class="overlay hidden">
+                <p class="kicker">FLIGHT REPORT</p>
+                <h1 id="result-title">Landed safely.</h1>
+                <p id="result-copy">Your sortie score is ready.</p><button id="again" class="primary-button"
+                    type="button">FLY AGAIN</button>
+            </div>
         </section>
-
-        <footer><span>ARROWS / A D TO STEER</span><span id="timer">SORTIE 60.0</span><span>VISIBILITY 10 KM</span>
-        </footer>
     </main>
     <script type="module" src="game.js"></script>
 </body>

@@ -14,6 +14,9 @@ const statusLabel = document.getElementById('status');
 const altitudeMeter = document.getElementById('altitude-meter');
 const speedMeter = document.getElementById('speed-meter');
 const fuelMeter = document.getElementById('fuel-meter');
+const engineValue = document.getElementById('engine-value');
+const engineMeter = document.getElementById('engine-meter');
+const verticalValue = document.getElementById('vertical-value');
 const trafficCount = document.getElementById('traffic-count');
 const radar = document.getElementById('radar');
 const radarContext = radar.getContext('2d');
@@ -145,9 +148,12 @@ function updateInstruments(elapsed) {
     headingLabel.textContent = `${String(Math.round(run.heading)).padStart(3, '0')}°`;
     scoreLabel.textContent = String(run.score).padStart(5, '0');
     timerLabel.textContent = `SORTIE ${Math.max(0, 60 - elapsed).toFixed(1)}`;
-    altitudeMeter.style.width = `${Math.min(100, run.altitude / 12)}%`;
-    speedMeter.style.width = `${Math.min(100, run.speed / 5)}%`;
-    fuelMeter.style.width = `${run.fuel}%`;
+    if (altitudeMeter) altitudeMeter.style.width = `${Math.min(100, run.altitude / 12)}%`;
+    if (speedMeter) speedMeter.style.width = `${Math.min(100, run.speed / 5)}%`;
+    if (fuelMeter) fuelMeter.style.height = `${run.fuel}%`;
+    if (engineValue) engineValue.textContent = String(Math.round(Math.min(100, run.speed / 4.6)));
+    if (engineMeter) engineMeter.style.height = `${Math.min(100, run.speed / 4.6)}%`;
+    if (verticalValue) verticalValue.textContent = String(Math.round(elapsed < 14 ? 560 : elapsed < 43 ? 16 : -470)).padStart(3, '0');
     phaseLabel.textContent = elapsed < 8 ? 'TAKEOFF' : elapsed < 43 ? 'CRUISE' : 'APPROACH';
     statusLabel.textContent = elapsed < 8 ? 'Rotate. Positive climb confirmed.' : elapsed < 43 ? 'Maintain heading. Watch your altitude.' : 'Approach runway 27. Bring it home.';
 }
