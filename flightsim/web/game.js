@@ -266,18 +266,70 @@ function updateInstruments(elapsed) {
 
 function draw(width, height, elapsed) {
     ctx.clearRect(0, 0, width, height);
-    const horizon = height * (.42 + (50 - Math.min(100, run.altitude / 12)) * .001);
-    const sky = ctx.createLinearGradient(0, 0, 0, height);
-    sky.addColorStop(0, '#193e57'); sky.addColorStop(.62, '#6a9b9d'); sky.addColorStop(.63, '#293b38'); sky.addColorStop(1, '#111e20');
-    ctx.fillStyle = sky; ctx.fillRect(0, 0, width, height);
-    drawTerrain(width, height, horizon, elapsed);
-    ctx.fillStyle = 'rgba(236, 247, 240, .28)';
-    run.clouds.forEach((cloud) => { ctx.beginPath(); ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2); ctx.fill(); });
-    const runwayWidth = Math.max(30, width * (.06 + (1 - run.altitude / 12000) * .7));
-    ctx.fillStyle = '#202c2e'; ctx.beginPath(); ctx.moveTo(width / 2 - runwayWidth, height); ctx.lineTo(width / 2 + runwayWidth, height); ctx.lineTo(width / 2 + 4, horizon + 25); ctx.lineTo(width / 2 - 4, horizon + 25); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = '#f3ca62'; ctx.setLineDash([18, 14]); ctx.beginPath(); ctx.moveTo(width / 2, horizon + 28); ctx.lineTo(width / 2, height); ctx.stroke(); ctx.setLineDash([]);
-    ctx.strokeStyle = 'rgba(107, 213, 210, .75)'; ctx.beginPath(); ctx.moveTo(width / 2 - 20, height - 44); ctx.lineTo(width / 2 + 20, height - 44); ctx.moveTo(width / 2, height - 54); ctx.lineTo(width / 2, height - 34); ctx.stroke();
-    drawLiveTraffic(width, height);
+    drawTopDown(width, height, elapsed);
+}
+
+function drawTopDown(width, height, elapsed) {
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const pixelsPerDegree = Math.min(width, height) * .72;
+    ctx.fillStyle = '#214c45';
+    ctx.fillRect(0, 0, width, height);
+
+    const fieldSize = 130;
+    for (let y = -fieldSize; y < height + fieldSize; y += fieldSize) {
+        for (let x = -fieldSize; x < width + fieldSize; x += fieldSize) {
+            const index = Math.abs(Math.floor(x / fieldSize) * 7 + Math.floor(y / fieldSize) * 3) % 5;
+            ctx.fillStyle = ['#315e4b', '#3b684e', '#496b4a', '#6a7649', '#28584b'][index];
+            ctx.fillRect(x + ((y / fieldSize) % 2) * 28, y, fieldSize - 4, fieldSize - 4);
+        }
+    }
+
+    ctx.strokeStyle = 'rgba(224, 228, 174, .35)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-20, height * .82); ctx.bezierCurveTo(width * .22, height * .58, width * .58, height * .9, width + 20, height * .24);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(53, 78, 60, .8)';
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.moveTo(-20, height * .22); ctx.bezierCurveTo(width * .3, height * .48, width * .58, height * .2, width + 20, height * .7);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(185, 237, 120, .28)';
+    ctx.lineWidth = 1;
+    for (let ring = 1; ring <= 4; ring += 1) {
+        ctx.beginPath(); ctx.arc(centerX, centerY, ring * 90, 0, Math.PI * 2); ctx.stroke();
+    }
+    for (let x = centerX % 90; x < width; x += 90) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke(); }
+    for (let y = centerY % 90; y < height; y += 90) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke(); }
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(run.heading * Math.PI / 180);
+    ctx.fillStyle = '#293438';
+    ctx.fillRect(-width * .22, -3, width * .44, 6);
+    ctx.fillStyle = '#ffdc65';
+    ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(8, 13); ctx.lineTo(0, 8); ctx.lineTo(-8, 13); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'white'; ctx.stroke();
+    ctx.restore();
+
+    liveTraffic.forEach((aircraft) => {
+        const x = centerX + (aircraft.lon - run.lon) * pixelsPerDegree;
+        const y = centerY - (aircraft.lat - run.lat) * pixelsPerDegree;
+        if (x < -20 || x > width + 20 || y < -20 || y > height + 20) return;
+        ctx.fillStyle = '#72e4ee';
+        ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(7, 35, 43, .8)';
+        ctx.font = '10px Consolas';
+        ctx.fillText(aircraft.callsign || aircraft.registration || aircraft.type, x + 8, y + 3);
+    });
+
+    ctx.fillStyle = 'rgba(245, 248, 243, .75)';
+    ctx.font = '10px Consolas';
+    ctx.fillText('2D AIRSPACE / 40 NM', 18, 24);
+    ctx.fillText(`${run.lat.toFixed(3)}° ${run.lon.toFixed(3)}°`, 18, 40);
+    ctx.fillText(`T+${elapsed.toFixed(0)} SEC`, width - 95, 24);
 }
 
 function drawTerrain(width, height, horizon, elapsed) {
