@@ -39,7 +39,7 @@ let localBest = Number(localStorage.getItem('flightsim-best') || 0);
 bestLabel.textContent = String(localBest).padStart(5, '0');
 
 addEventListener('keydown', (event) => {
-    if (['ArrowLeft', 'ArrowRight', 'a', 'd', 'A', 'D'].includes(event.key)) {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'a', 'd', 'w', 's', 'A', 'D', 'W', 'S'].includes(event.key)) {
         event.preventDefault();
         keys.add(event.key.toLowerCase());
     }
@@ -117,10 +117,11 @@ function frame(now) {
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
     const steering = (keys.has('arrowright') || keys.has('d') ? 1 : 0) - (keys.has('arrowleft') || keys.has('a') ? 1 : 0);
+    const throttle = (keys.has('arrowup') || keys.has('w') ? 1 : 0) - (keys.has('arrowdown') || keys.has('s') ? 1 : 0);
     run.heading += steering * 62 * delta;
     run.heading = Math.max(8, Math.min(172, run.heading));
-    run.speed = Math.min(460, run.speed + (elapsed < 8 ? 30 : 2) * delta);
-    if (elapsed > 7) run.speed -= 5 * delta;
+    run.speed = Math.min(460, run.speed + (elapsed < 8 ? 30 : 2) * delta + throttle * 120 * delta);
+    if (elapsed > 7 && !throttle) run.speed -= 5 * delta;
     run.speed = Math.max(0, run.speed);
     const climb = elapsed < 14 ? 560 : elapsed < 43 ? 16 : -470;
     run.altitude = Math.max(0, run.altitude + climb * delta + steering * 22 * delta);
