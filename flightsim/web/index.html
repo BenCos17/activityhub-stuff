@@ -24,7 +24,7 @@
                 <button class="tool" type="button" title="Flight instruments">✓</button>
                 <button class="tool" type="button" title="Aircraft systems">⌁</button>
                 <button class="tool" type="button" title="Navigation">◉</button>
-                <button class="tool" type="button" title="Map">⌖</button>
+                <button id="map-toggle" class="tool" type="button" title="Open live map">⌖</button>
                 <button class="tool" type="button" title="Weather">☁</button>
                 <button class="tool" type="button" title="Settings">⚙</button>
             </nav>
@@ -56,6 +56,14 @@
             <div class="traffic-card"><span>NEARBY AIRCRAFT</span><canvas id="radar" width="120" height="78"></canvas>
                 <p id="traffic-detail">NO CONTACT SELECTED</p>
             </div>
+            <section id="map-panel" class="map-panel hidden" aria-label="Live aircraft map">
+                <div class="map-header"><strong>LIVE AIRSPACE</strong><span id="map-status">LOADING MAP</span><button
+                        id="map-close" type="button">×</button></div>
+                <div id="live-map" class="live-map"></div>
+                <div class="map-footer"><span>© OPENSTREETMAP CONTRIBUTORS / KDCA 40 NM</span><span
+                        id="selected-flight">SELECT AN
+                        AIRCRAFT</span></div>
+            </section>
             <div class="score-readout"><span>SCORE <b id="score">00000</b></span><span>BEST <b
                         id="best">00000</b></span></div>
             <p id="status" class="status">Systems nominal. Awaiting pilot.</p>
@@ -63,7 +71,8 @@
                 <p class="kicker">ATC CLEARANCE RECEIVED</p>
                 <h1>Take the controls.</h1>
                 <p>Throttle with <kbd>W</kbd> <kbd>S</kbd> or <kbd>↑</kbd> <kbd>↓</kbd>. Steer with <kbd>A</kbd>
-                    <kbd>D</kbd>. Land on runway 27.</p><button id="start" class="primary-button" type="button">START
+                    <kbd>D</kbd>. Land on runway 27.
+                </p><button id="start" class="primary-button" type="button">START
                     FLIGHT</button>
             </div>
             <div id="end-panel" class="overlay hidden">

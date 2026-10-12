@@ -21,6 +21,10 @@ const trafficCount = document.getElementById('traffic-count');
 const radar = document.getElementById('radar');
 const radarContext = radar.getContext('2d');
 const trafficDetail = document.getElementById('traffic-detail');
+const mapPanel = document.getElementById('map-panel');
+const liveMap = document.getElementById('live-map');
+const mapStatus = document.getElementById('map-status');
+const selectedFlight = document.getElementById('selected-flight');
 const startPanel = document.getElementById('start-panel');
 const endPanel = document.getElementById('end-panel');
 const resultTitle = document.getElementById('result-title');
@@ -35,6 +39,9 @@ let animationId;
 let lastFrame = 0;
 let run = null;
 let liveTraffic = [];
+let selectedAircraft = null;
+const mapCenter = { lat: 38.84916, lon: -77.04138 };
+const mapZoom = 9;
 let localBest = Number(localStorage.getItem('flightsim-best') || 0);
 bestLabel.textContent = String(localBest).padStart(5, '0');
 
@@ -47,6 +54,11 @@ addEventListener('keydown', (event) => {
 addEventListener('keyup', (event) => keys.delete(event.key.toLowerCase()));
 document.getElementById('start').addEventListener('click', startGame);
 document.getElementById('again').addEventListener('click', startGame);
+document.getElementById('map-toggle').addEventListener('click', () => {
+    mapPanel.classList.toggle('hidden');
+    if (!mapPanel.classList.contains('hidden')) renderLiveMap();
+});
+document.getElementById('map-close').addEventListener('click', () => mapPanel.classList.add('hidden'));
 
 function resize() {
     const ratio = Math.min(devicePixelRatio || 1, 2);
@@ -79,6 +91,7 @@ async function refreshTraffic() {
         liveTraffic = result.aircraft || [];
         trafficCount.textContent = result.configured ? `${String(liveTraffic.length).padStart(2, '0')} AC` : 'OFFLINE';
         updateTrafficDetail();
+        renderLiveMap();
         if (result.error) {
             trafficCount.textContent = 'ERROR';
             statusLabel.textContent = result.error;
@@ -105,6 +118,66 @@ function updateTrafficDetail() {
     const speed = aircraft.speed ? `${Math.round(aircraft.speed)} KT` : 'SPEED ?';
     const heading = aircraft.heading ? `HDG ${Math.round(aircraft.heading)}°` : 'HDG ?';
     trafficDetail.textContent = `${name} / ${aircraft.type} / ${altitude}\n${speed} / ${heading} / SQK ${aircraft.squawk || '----'}`;
+}
+
+function projectMap(latitude, longitude) {
+    const scale = 256 * 2 ** mapZoom;
+    const x = (longitude + 180) / 360 * scale;
+    const sinLatitude = Math.sin(latitude * Math.PI / 180);
+    const y = (0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI)) * scale;
+    return { x, y };
+}
+
+function renderLiveMap() {
+    if (!liveMap) return;
+    liveMap.replaceChildren();
+    const center = projectMap(mapCenter.lat, mapCenter.lon);
+    const tileSize = 256;
+    const width = liveMap.clientWidth || 720;
+    const height = liveMap.clientHeight || 420;
+    const startX = Math.floor((center.x - width / 2) / tileSize);
+    const startY = Math.floor((center.y - height / 2) / tileSize);
+    const columns = Math.ceil(width / tileSize) + 2;
+    const rows = Math.ceil(height / tileSize) + 2;
+    const maxTile = 2 ** mapZoom;
+    for (let row = startY; row < startY + rows; row += 1) {
+        for (let column = startX; column < startX + columns; column += 1) {
+            const image = document.createElement('img');
+            image.className = 'map-tile';
+            image.alt = '';
+            image.loading = 'lazy';
+            image.src = `https://tile.openstreetmap.org/${mapZoom}/${((column % maxTile) + maxTile) % maxTile}/${Math.max(0, Math.min(maxTile - 1, row))}.png`;
+            image.style.left = `${column * tileSize - center.x + width / 2}px`;
+            image.style.top = `${row * tileSize - center.y + height / 2}px`;
+            liveMap.append(image);
+        }
+    }
+    const centerMarker = document.createElement('div');
+    centerMarker.className = 'map-center';
+    liveMap.append(centerMarker);
+    liveTraffic.forEach((aircraft, index) => {
+        const point = projectMap(aircraft.lat, aircraft.lon);
+        const marker = document.createElement('button');
+        marker.type = 'button';
+        marker.className = `map-marker${selectedAircraft === aircraft ? ' selected' : ''}`;
+        marker.style.left = `${point.x - center.x + width / 2}px`;
+        marker.style.top = `${point.y - center.y + height / 2}px`;
+        marker.title = aircraft.callsign || aircraft.registration || `Aircraft ${index + 1}`;
+        const label = document.createElement('span');
+        label.textContent = aircraft.callsign || aircraft.registration || aircraft.type;
+        marker.append(label);
+        marker.addEventListener('click', () => selectAircraft(aircraft));
+        liveMap.append(marker);
+    });
+    mapStatus.textContent = `${liveTraffic.length} CONTACTS / 15S CACHE`;
+}
+
+function selectAircraft(aircraft) {
+    selectedAircraft = aircraft;
+    const name = aircraft.callsign || aircraft.registration || 'UNKNOWN';
+    selectedFlight.textContent = `${name} / ${aircraft.type} / ${aircraft.altitude || 'GND'} FT / ${aircraft.speed ? Math.round(aircraft.speed) : '?'} KT`;
+    updateTrafficDetail();
+    renderLiveMap();
 }
 
 setInterval(refreshTraffic, 15000);

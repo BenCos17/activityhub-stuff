@@ -423,6 +423,96 @@ button {
     white-space: pre-line;
 }
 
+.map-panel {
+    position: absolute;
+    z-index: 7;
+    inset: 12% 10% 18%;
+    display: grid;
+    grid-template-rows: 36px 1fr 28px;
+    border: 1px solid rgba(255, 255, 255, .7);
+    background: #173b46;
+    box-shadow: 0 18px 60px rgba(0, 20, 28, .5);
+}
+
+.map-header,
+.map-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    background: rgba(7, 36, 44, .9);
+    color: white;
+    font: 10px Consolas, monospace;
+    letter-spacing: 1px;
+}
+
+.map-header span,
+.map-footer {
+    color: var(--green);
+    font-size: 8px;
+}
+
+.map-header button {
+    border: 0;
+    background: transparent;
+    color: white;
+    font-size: 22px;
+    line-height: 1;
+}
+
+.live-map {
+    position: relative;
+    overflow: hidden;
+    background: #aac5bd;
+    cursor: crosshair;
+}
+
+.map-tile {
+    position: absolute;
+    width: 256px;
+    height: 256px;
+}
+
+.map-marker {
+    position: absolute;
+    z-index: 2;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #082a34;
+    border-radius: 50% 50% 50% 0;
+    background: var(--yellow);
+    box-shadow: 0 0 0 3px rgba(255, 220, 101, .3);
+    transform: rotate(-45deg) translate(-50%, -50%);
+    cursor: pointer;
+}
+
+.map-marker.selected {
+    background: var(--cyan);
+    box-shadow: 0 0 0 5px rgba(114, 228, 238, .28);
+}
+
+.map-marker span {
+    position: absolute;
+    top: 12px;
+    left: 10px;
+    min-width: 44px;
+    color: #082a34;
+    font: 9px Consolas, monospace;
+    transform: rotate(45deg);
+}
+
+.map-center {
+    position: absolute;
+    z-index: 3;
+    top: 50%;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    border: 2px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
 .score-readout {
     position: absolute;
     z-index: 2;
@@ -503,7 +593,7 @@ kbd {
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 @media (max-width: 700px) {
@@ -583,5 +673,9 @@ kbd {
 
     .brand small {
         display: none;
+    }
+
+    .map-panel {
+        inset: 16% 5% 24%;
     }
 }
