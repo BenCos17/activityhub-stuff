@@ -81,7 +81,7 @@ resize();
 function startGame() {
     startPanel.classList.add('hidden');
     endPanel.classList.add('hidden');
-    run = { started: performance.now(), lastCloud: 0, score: 0, fuel: 100, altitude: 800, speed: 120, heading: 90, pitch: 0, lat: mapCenter.lat, lon: mapCenter.lon, clouds: [] };
+    run = { started: performance.now(), lastCloud: 0, score: 0, fuel: 100, altitude: 800, speed: 120, heading: 90, pitch: 0, lat: mapCenter.lat, lon: mapCenter.lon, distance: 0, clouds: [] };
     phaseLabel.textContent = 'SANDBOX';
     statusLabel.textContent = 'Free flight ready. Throttle and pitch are yours.';
     cancelAnimationFrame(animationId);
@@ -220,7 +220,7 @@ function frame(now) {
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
     const steering = (keys.has('arrowright') || keys.has('d') ? 1 : 0) - (keys.has('arrowleft') || keys.has('a') ? 1 : 0);
-    const throttle = (keys.has('w') ? 1 : 0) - (keys.has('s') ? 1 : 0);
+    const throttle = (keys.has('w') || keys.has('arrowup') ? 1 : 0) - (keys.has('s') || keys.has('arrowdown') ? 1 : 0);
     const pitchInput = (keys.has('arrowup') ? 1 : 0) - (keys.has('arrowdown') ? 1 : 0);
     run.heading = (run.heading + steering * 75 * delta + 360) % 360;
     run.pitch += (pitchInput * 32 - run.pitch * 2.8) * delta;
@@ -233,6 +233,7 @@ function frame(now) {
     const headingRadians = run.heading * Math.PI / 180;
     run.lat += Math.cos(headingRadians) * distanceNm / 60;
     run.lon += Math.sin(headingRadians) * distanceNm / (60 * Math.max(.2, Math.cos(run.lat * Math.PI / 180)));
+    run.distance += distanceNm;
     if (now - run.lastCloud > 900) {
         run.lastCloud = now;
         run.clouds.push({ x: Math.random() * width, y: -30, size: 12 + Math.random() * 18, speed: 30 + Math.random() * 25 });
@@ -276,6 +277,10 @@ function drawTopDown(width, height, elapsed) {
     ctx.fillStyle = '#214c45';
     ctx.fillRect(0, 0, width, height);
 
+    const travelPixels = (run.distance * 180) % 260;
+    const travelAngle = run.heading * Math.PI / 180;
+    ctx.save();
+    ctx.translate(Math.sin(travelAngle) * travelPixels, -Math.cos(travelAngle) * travelPixels);
     const fieldSize = 130;
     for (let y = -fieldSize; y < height + fieldSize; y += fieldSize) {
         for (let x = -fieldSize; x < width + fieldSize; x += fieldSize) {
@@ -295,6 +300,7 @@ function drawTopDown(width, height, elapsed) {
     ctx.beginPath();
     ctx.moveTo(-20, height * .22); ctx.bezierCurveTo(width * .3, height * .48, width * .58, height * .2, width + 20, height * .7);
     ctx.stroke();
+    ctx.restore();
 
     ctx.strokeStyle = 'rgba(185, 237, 120, .28)';
     ctx.lineWidth = 1;
@@ -329,6 +335,7 @@ function drawTopDown(width, height, elapsed) {
     ctx.font = '10px Consolas';
     ctx.fillText('2D AIRSPACE / 40 NM', 18, 24);
     ctx.fillText(`${run.lat.toFixed(3)}° ${run.lon.toFixed(3)}°`, 18, 40);
+    ctx.fillText(`GROUND ${Math.round(run.speed)} KT / DIST ${run.distance.toFixed(1)} NM`, 18, 56);
     ctx.fillText(`T+${elapsed.toFixed(0)} SEC`, width - 95, 24);
 }
 
