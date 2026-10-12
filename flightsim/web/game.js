@@ -24,6 +24,8 @@ const trafficDetail = document.getElementById('traffic-detail');
 const mapPanel = document.getElementById('map-panel');
 const liveMap = document.getElementById('live-map');
 const mapStatus = document.getElementById('map-status');
+const imageryToggle = document.getElementById('imagery-toggle');
+const mapAttribution = document.getElementById('map-attribution');
 const selectedFlight = document.getElementById('selected-flight');
 const startPanel = document.getElementById('start-panel');
 const endPanel = document.getElementById('end-panel');
@@ -40,8 +42,9 @@ let lastFrame = 0;
 let run = null;
 let liveTraffic = [];
 let selectedAircraft = null;
-const mapCenter = { lat: 38.84916, lon: -77.04138 };
+let mapCenter = { lat: 38.84916, lon: -77.04138 };
 const mapZoom = 9;
+let mapLayer = 'satellite';
 let localBest = Number(localStorage.getItem('flightsim-best') || 0);
 bestLabel.textContent = String(localBest).padStart(5, '0');
 
@@ -59,6 +62,12 @@ document.getElementById('map-toggle').addEventListener('click', () => {
     if (!mapPanel.classList.contains('hidden')) renderLiveMap();
 });
 document.getElementById('map-close').addEventListener('click', () => mapPanel.classList.add('hidden'));
+imageryToggle.addEventListener('click', () => {
+    mapLayer = mapLayer === 'satellite' ? 'street' : 'satellite';
+    imageryToggle.textContent = mapLayer === 'satellite' ? 'SATELLITE' : 'STREET MAP';
+    mapAttribution.textContent = mapLayer === 'satellite' ? '© ESRI WORLD IMAGERY / 40 NM AIRSPACE' : '© OPENSTREETMAP CONTRIBUTORS / 40 NM AIRSPACE';
+    renderLiveMap();
+});
 
 function resize() {
     const ratio = Math.min(devicePixelRatio || 1, 2);
@@ -72,11 +81,13 @@ resize();
 function startGame() {
     startPanel.classList.add('hidden');
     endPanel.classList.add('hidden');
-    run = { started: performance.now(), lastCloud: 0, score: 0, fuel: 100, altitude: 0, speed: 0, heading: 90, target: 50, clouds: [] };
-    statusLabel.textContent = 'Throttle up. Rotate at 120 knots.';
+    run = { started: performance.now(), lastCloud: 0, score: 0, fuel: 100, altitude: 800, speed: 120, heading: 90, pitch: 0, lat: mapCenter.lat, lon: mapCenter.lon, clouds: [] };
+    phaseLabel.textContent = 'SANDBOX';
+    statusLabel.textContent = 'Free flight ready. Throttle and pitch are yours.';
     cancelAnimationFrame(animationId);
     lastFrame = performance.now();
     refreshTraffic();
+    renderLiveMap();
     animationId = requestAnimationFrame(frame);
 }
 
@@ -87,7 +98,7 @@ async function refreshTraffic() {
         return;
     }
     try {
-        const result = await hub.api('get_traffic', {});
+        const result = await hub.api('get_traffic', { lat: mapCenter.lat, lon: mapCenter.lon, radius: 40 });
         liveTraffic = result.aircraft || [];
         trafficCount.textContent = result.configured ? `${String(liveTraffic.length).padStart(2, '0')} AC` : 'OFFLINE';
         updateTrafficDetail();
@@ -146,7 +157,11 @@ function renderLiveMap() {
             image.className = 'map-tile';
             image.alt = '';
             image.loading = 'lazy';
-            image.src = `https://tile.openstreetmap.org/${mapZoom}/${((column % maxTile) + maxTile) % maxTile}/${Math.max(0, Math.min(maxTile - 1, row))}.png`;
+            const tileX = ((column % maxTile) + maxTile) % maxTile;
+            const tileY = Math.max(0, Math.min(maxTile - 1, row));
+            image.src = mapLayer === 'satellite'
+                ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${mapZoom}/${tileY}/${tileX}`
+                : `https://tile.openstreetmap.org/${mapZoom}/${tileX}/${tileY}.png`;
             image.style.left = `${column * tileSize - center.x + width / 2}px`;
             image.style.top = `${row * tileSize - center.y + height / 2}px`;
             liveMap.append(image);
@@ -155,6 +170,15 @@ function renderLiveMap() {
     const centerMarker = document.createElement('div');
     centerMarker.className = 'map-center';
     liveMap.append(centerMarker);
+    if (run) {
+        const playerPoint = projectMap(run.lat, run.lon);
+        const playerMarker = document.createElement('div');
+        playerMarker.className = 'map-player';
+        playerMarker.title = 'Your aircraft';
+        playerMarker.style.left = `${playerPoint.x - center.x + width / 2}px`;
+        playerMarker.style.top = `${playerPoint.y - center.y + height / 2}px`;
+        liveMap.append(playerMarker);
+    }
     liveTraffic.forEach((aircraft, index) => {
         const point = projectMap(aircraft.lat, aircraft.lon);
         const marker = document.createElement('button');
@@ -181,6 +205,12 @@ function selectAircraft(aircraft) {
 }
 
 setInterval(refreshTraffic, 15000);
+setInterval(() => {
+    if (run) {
+        mapCenter = { lat: run.lat, lon: run.lon };
+        if (!mapPanel.classList.contains('hidden')) renderLiveMap();
+    }
+}, 2000);
 
 function frame(now) {
     if (!run) return;
@@ -190,27 +220,29 @@ function frame(now) {
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
     const steering = (keys.has('arrowright') || keys.has('d') ? 1 : 0) - (keys.has('arrowleft') || keys.has('a') ? 1 : 0);
-    const throttle = (keys.has('arrowup') || keys.has('w') ? 1 : 0) - (keys.has('arrowdown') || keys.has('s') ? 1 : 0);
-    run.heading += steering * 62 * delta;
-    run.heading = Math.max(8, Math.min(172, run.heading));
-    run.speed = Math.min(460, run.speed + (elapsed < 8 ? 30 : 2) * delta + throttle * 120 * delta);
-    if (elapsed > 7 && !throttle) run.speed -= 5 * delta;
-    run.speed = Math.max(0, run.speed);
-    const climb = elapsed < 14 ? 560 : elapsed < 43 ? 16 : -470;
-    run.altitude = Math.max(0, run.altitude + climb * delta + steering * 22 * delta);
-    run.fuel = Math.max(0, 100 - elapsed * 1.25);
-    run.target = elapsed < 14 ? 50 : elapsed < 43 ? 50 + Math.sin(elapsed * .35) * 14 : 50;
+    const throttle = (keys.has('w') ? 1 : 0) - (keys.has('s') ? 1 : 0);
+    const pitchInput = (keys.has('arrowup') ? 1 : 0) - (keys.has('arrowdown') ? 1 : 0);
+    run.heading = (run.heading + steering * 75 * delta + 360) % 360;
+    run.pitch += (pitchInput * 32 - run.pitch * 2.8) * delta;
+    run.pitch = Math.max(-18, Math.min(18, run.pitch));
+    run.speed = Math.max(45, Math.min(520, run.speed + throttle * 150 * delta - (run.speed - 180) * .035 * delta));
+    const verticalSpeed = run.pitch * 55;
+    run.altitude = Math.max(0, Math.min(20000, run.altitude + verticalSpeed * delta));
+    run.fuel = Math.max(0, run.fuel - (.08 + run.speed / 9000) * delta);
+    const distanceNm = run.speed * delta / 3600;
+    const headingRadians = run.heading * Math.PI / 180;
+    run.lat += Math.cos(headingRadians) * distanceNm / 60;
+    run.lon += Math.sin(headingRadians) * distanceNm / (60 * Math.max(.2, Math.cos(run.lat * Math.PI / 180)));
     if (now - run.lastCloud > 900) {
         run.lastCloud = now;
         run.clouds.push({ x: Math.random() * width, y: -30, size: 12 + Math.random() * 18, speed: 30 + Math.random() * 25 });
     }
     run.clouds.forEach((cloud) => cloud.y += cloud.speed * delta);
     run.clouds = run.clouds.filter((cloud) => cloud.y < height + 40);
-    run.score = Math.floor(elapsed * 120 + Math.max(0, 100 - Math.abs(run.altitude / 100 - run.target)) * elapsed * 2);
+    run.score = Math.floor(elapsed * 120 + run.altitude * .05 + run.speed * .2);
     draw(width, height, elapsed);
     updateInstruments(elapsed);
     if (run.fuel <= 0) return finishRun('Fuel exhausted.');
-    if (elapsed >= 60) return finishRun(Math.abs(run.altitude) < 120 ? 'Landed safely.' : 'Hard landing.');
     animationId = requestAnimationFrame(frame);
 }
 
@@ -221,15 +253,15 @@ function updateInstruments(elapsed) {
     fuelLabel.textContent = String(Math.round(run.fuel)).padStart(3, '0');
     headingLabel.textContent = `${String(Math.round(run.heading)).padStart(3, '0')}°`;
     scoreLabel.textContent = String(run.score).padStart(5, '0');
-    timerLabel.textContent = `SORTIE ${Math.max(0, 60 - elapsed).toFixed(1)}`;
+    timerLabel.textContent = `FLIGHT ${elapsed.toFixed(1)}`;
     if (altitudeMeter) altitudeMeter.style.width = `${Math.min(100, run.altitude / 12)}%`;
     if (speedMeter) speedMeter.style.width = `${Math.min(100, run.speed / 5)}%`;
     if (fuelMeter) fuelMeter.style.height = `${run.fuel}%`;
     if (engineValue) engineValue.textContent = String(Math.round(Math.min(100, run.speed / 4.6)));
     if (engineMeter) engineMeter.style.height = `${Math.min(100, run.speed / 4.6)}%`;
-    if (verticalValue) verticalValue.textContent = String(Math.round(elapsed < 14 ? 560 : elapsed < 43 ? 16 : -470)).padStart(3, '0');
-    phaseLabel.textContent = elapsed < 8 ? 'TAKEOFF' : elapsed < 43 ? 'CRUISE' : 'APPROACH';
-    statusLabel.textContent = elapsed < 8 ? 'Rotate. Positive climb confirmed.' : elapsed < 43 ? 'Maintain heading. Watch your altitude.' : 'Approach runway 27. Bring it home.';
+    if (verticalValue) verticalValue.textContent = String(Math.round(run.pitch * 55)).padStart(3, '0');
+    phaseLabel.textContent = 'SANDBOX';
+    statusLabel.textContent = run.fuel < 20 ? 'LOW FUEL. Find a runway.' : `Free flight / ${run.pitch > 2 ? 'climbing' : run.pitch < -2 ? 'descending' : 'level flight'}.`;
 }
 
 function draw(width, height, elapsed) {

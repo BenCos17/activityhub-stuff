@@ -17,6 +17,7 @@ class FlightSim(commands.Cog):
         self.config.register_global(api_key="")
         self.config.register_member(best_score=0)
         self._traffic_cache = None
+        self._traffic_cache_key = None
         self._traffic_cache_expires = 0.0
         self._traffic_cache_lock = asyncio.Lock()
 
@@ -31,9 +32,16 @@ class FlightSim(commands.Cog):
 
     async def get_traffic(self, ctx, data: dict) -> dict:
         """Fetch nearby aircraft without exposing the Airplanes.Live key to clients."""
+        try:
+            latitude = max(-90.0, min(90.0, float(data.get("lat", 38.84916))))
+            longitude = max(-180.0, min(180.0, float(data.get("lon", -77.04138))))
+            radius = max(1.0, min(250.0, float(data.get("radius", 40))))
+        except (AttributeError, TypeError, ValueError):
+            latitude, longitude, radius = 38.84916, -77.04138, 40.0
+        cache_key = (round(latitude, 2), round(longitude, 2), round(radius, 1))
         async with self._traffic_cache_lock:
             now = time.monotonic()
-            if self._traffic_cache is not None and now < self._traffic_cache_expires:
+            if self._traffic_cache is not None and self._traffic_cache_key == cache_key and now < self._traffic_cache_expires:
                 return self._traffic_cache
 
             api_key = await self.config.api_key()
@@ -41,7 +49,7 @@ class FlightSim(commands.Cog):
                 result = {"configured": False, "aircraft": []}
             else:
                 request = Request(
-                    "https://rest.api.airplanes.live/?circle=38.84916,-77.04138,40",
+                    f"https://rest.api.airplanes.live/?circle={latitude:.5f},{longitude:.5f},{radius:g}",
                     headers={"User-Agent": "ActivityHub Flight Sim"},
                 )
                 request.add_header("auth", api_key)
@@ -55,6 +63,7 @@ class FlightSim(commands.Cog):
                     result = {"configured": True, "aircraft": [], "error": "Airplanes.Live could not be reached."}
 
             self._traffic_cache = result
+            self._traffic_cache_key = cache_key
             self._traffic_cache_expires = time.monotonic() + 15
             return result
 

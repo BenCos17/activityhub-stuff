@@ -30,7 +30,8 @@
             </nav>
             <div class="compass-overlay"><span>N</span><span>E</span><span>S</span><span>W</span><i
                     id="heading">090°</i></div>
-            <div class="waypoint"><b>RUNWAY 27</b><span>40 NM AREA / <strong id="traffic-count">-- AC</strong></span>
+            <div class="waypoint"><b>FREE AIRSPACE</b><span>40 NM AREA / <strong id="traffic-count">--
+                        AC</strong></span>
             </div>
             <div class="flight-path"><i></i><i></i><i></i></div>
             <section class="lower-instruments" aria-label="Flight instruments">
@@ -57,12 +58,12 @@
                 <p id="traffic-detail">NO CONTACT SELECTED</p>
             </div>
             <section id="map-panel" class="map-panel hidden" aria-label="Live aircraft map">
-                <div class="map-header"><strong>LIVE AIRSPACE</strong><span id="map-status">LOADING MAP</span><button
+                <div class="map-header"><strong>LIVE AIRSPACE</strong><span id="map-status">LOADING
+                        SATELLITE</span><button id="imagery-toggle" type="button">SATELLITE</button><button
                         id="map-close" type="button">×</button></div>
                 <div id="live-map" class="live-map"></div>
-                <div class="map-footer"><span>© OPENSTREETMAP CONTRIBUTORS / KDCA 40 NM</span><span
-                        id="selected-flight">SELECT AN
-                        AIRCRAFT</span></div>
+                <div class="map-footer"><span id="map-attribution">© ESRI WORLD IMAGERY / 40 NM AIRSPACE</span><span
+                        id="selected-flight">SELECT AN AIRCRAFT</span></div>
             </section>
             <div class="score-readout"><span>SCORE <b id="score">00000</b></span><span>BEST <b
                         id="best">00000</b></span></div>
@@ -70,8 +71,9 @@
             <div id="start-panel" class="overlay">
                 <p class="kicker">ATC CLEARANCE RECEIVED</p>
                 <h1>Take the controls.</h1>
-                <p>Throttle with <kbd>W</kbd> <kbd>S</kbd> or <kbd>↑</kbd> <kbd>↓</kbd>. Steer with <kbd>A</kbd>
-                    <kbd>D</kbd>. Land on runway 27.
+                <p>Throttle with <kbd>W</kbd> <kbd>S</kbd>. Pitch with <kbd>↑</kbd> <kbd>↓</kbd> and steer with
+                    <kbd>A</kbd>
+                    <kbd>D</kbd>. Explore freely.
                 </p><button id="start" class="primary-button" type="button">START
                     FLIGHT</button>
             </div>

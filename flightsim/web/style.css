@@ -460,6 +460,16 @@ button {
     line-height: 1;
 }
 
+.map-header #imagery-toggle {
+    margin-left: auto;
+    margin-right: 10px;
+    padding: 4px 7px;
+    border: 1px solid rgba(185, 237, 120, .7);
+    color: var(--green);
+    font: 8px Consolas, monospace;
+    letter-spacing: .5px;
+}
+
 .live-map {
     position: relative;
     overflow: hidden;
@@ -510,6 +520,18 @@ button {
     height: 14px;
     border: 2px solid white;
     border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.map-player {
+    position: absolute;
+    z-index: 4;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #082a34;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 0 5px rgba(114, 228, 238, .35);
     transform: translate(-50%, -50%);
 }
 
