@@ -567,29 +567,36 @@ button {
 .map-marker {
     position: absolute;
     z-index: 2;
-    width: 12px;
-    height: 12px;
-    border: 2px solid #082a34;
-    border-radius: 50% 50% 50% 0;
-    background: var(--yellow);
-    box-shadow: 0 0 0 3px rgba(255, 220, 101, .3);
-    transform: rotate(-45deg) translate(-50%, -50%);
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    transform: translate(-50%, -50%);
     cursor: pointer;
 }
 
-.map-marker.selected {
+.map-marker i {
+    position: absolute;
+    inset: 0;
+    background: var(--yellow);
+    clip-path: polygon(50% 0, 100% 100%, 50% 75%, 0 100%);
+}
+
+.map-marker.selected i {
     background: var(--cyan);
-    box-shadow: 0 0 0 5px rgba(114, 228, 238, .28);
 }
 
 .map-marker span {
     position: absolute;
-    top: 12px;
-    left: 10px;
+    top: 14px;
+    left: 12px;
     min-width: 44px;
     color: #082a34;
     font: 9px Consolas, monospace;
-    transform: rotate(45deg);
+    transform: none;
 }
 
 .map-center {

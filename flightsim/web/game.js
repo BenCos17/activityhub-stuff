@@ -51,6 +51,7 @@ let mapLayer = 'satellite';
 const terrainZoom = 12;
 const streetTileCache = new Map();
 let mapScene = null;
+let playerMarkerEl = null;
 let viewMode = 'cockpit';
 let localBest = Number(localStorage.getItem('flightsim-best') || 0);
 bestLabel.textContent = String(localBest).padStart(5, '0');
@@ -177,6 +178,7 @@ function projectMap(latitude, longitude) {
 function renderLiveMap() {
     if (!liveMap) return;
     liveMap.replaceChildren();
+    playerMarkerEl = null;
     mapScene = document.createElement('div');
     mapScene.className = 'map-scene';
     liveMap.append(mapScene);
@@ -214,6 +216,7 @@ function renderLiveMap() {
         const playerMarker = document.createElement('div');
         playerMarker.className = 'map-player';
         playerMarker.title = 'Your aircraft';
+        playerMarkerEl = playerMarker;
         playerMarker.style.left = `${playerPoint.x - center.x + width / 2}px`;
         playerMarker.style.top = `${playerPoint.y - center.y + height / 2}px`;
         playerMarker.style.transform = `translate(-50%, -50%) rotate(${run.heading}deg)`;
@@ -227,6 +230,9 @@ function renderLiveMap() {
         marker.style.left = `${point.x - center.x + width / 2}px`;
         marker.style.top = `${point.y - center.y + height / 2}px`;
         marker.title = aircraft.callsign || aircraft.registration || `Aircraft ${index + 1}`;
+        const icon = document.createElement('i');
+        icon.style.transform = `rotate(${Number(aircraft.heading) || 0}deg)`;
+        marker.append(icon);
         const label = document.createElement('span');
         label.textContent = aircraft.callsign || aircraft.registration || aircraft.type;
         marker.append(label);
@@ -239,9 +245,10 @@ function renderLiveMap() {
 
 function updateMapOrientation() {
     if (mapScene) {
-        mapScene.style.transform = run
-            ? `rotate(${-run.heading}deg)`
-            : 'none';
+        mapScene.style.transform = run ? `rotate(${-run.heading}deg)` : 'none';
+    }
+    if (playerMarkerEl && run) {
+        playerMarkerEl.style.transform = `translate(-50%, -50%) rotate(${run.heading}deg)`;
     }
 }
 
