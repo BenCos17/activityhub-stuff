@@ -531,6 +531,14 @@ button {
     font: 18px Consolas, monospace;
 }
 
+.map-controls #imagery-toggle {
+    width: auto;
+    padding: 0 7px;
+    color: var(--green);
+    font-size: 8px;
+    letter-spacing: .5px;
+}
+
 .map-controls button:hover {
     border-color: var(--green);
     color: var(--green);
@@ -541,6 +549,13 @@ button {
     overflow: hidden;
     background: #aac5bd;
     cursor: crosshair;
+}
+
+.map-scene {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 50%;
+    will-change: transform;
 }
 
 .map-tile {

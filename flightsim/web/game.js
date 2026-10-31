@@ -24,6 +24,7 @@ const trafficDetail = document.getElementById('traffic-detail');
 const mapPanel = document.getElementById('map-panel');
 const liveMap = document.getElementById('live-map');
 const mapStatus = document.getElementById('map-status');
+const imageryToggle = document.getElementById('imagery-toggle');
 const selectedFlight = document.getElementById('selected-flight');
 const startPanel = document.getElementById('start-panel');
 const endPanel = document.getElementById('end-panel');
@@ -45,8 +46,10 @@ let liveTraffic = [];
 let selectedAircraft = null;
 let mapCenter = { lat: 38.84916, lon: -77.04138 };
 let mapZoom = 9;
+let mapLayer = 'street';
 const terrainZoom = 12;
 const streetTileCache = new Map();
+let mapScene = null;
 let viewMode = 'cockpit';
 let localBest = Number(localStorage.getItem('flightsim-best') || 0);
 bestLabel.textContent = String(localBest).padStart(5, '0');
@@ -82,6 +85,11 @@ document.getElementById('map-close').addEventListener('click', () => {
     mapPanel.classList.add('hidden');
     simWindow.classList.remove('map-view');
     document.getElementById('map-toggle').classList.remove('active');
+});
+imageryToggle.addEventListener('click', () => {
+    mapLayer = mapLayer === 'street' ? 'satellite' : 'street';
+    imageryToggle.textContent = mapLayer === 'street' ? 'STREET' : 'SATELLITE';
+    renderLiveMap();
 });
 document.getElementById('zoom-in').addEventListener('click', () => {
     mapZoom = Math.min(13, mapZoom + 1);
@@ -165,6 +173,9 @@ function projectMap(latitude, longitude) {
 function renderLiveMap() {
     if (!liveMap) return;
     liveMap.replaceChildren();
+    mapScene = document.createElement('div');
+    mapScene.className = 'map-scene';
+    liveMap.append(mapScene);
     const center = projectMap(mapCenter.lat, mapCenter.lon);
     const tileSize = 256;
     const width = liveMap.clientWidth || 720;
@@ -182,11 +193,13 @@ function renderLiveMap() {
             image.loading = 'lazy';
             const tileX = ((column % maxTile) + maxTile) % maxTile;
             const tileY = Math.max(0, Math.min(maxTile - 1, row));
-            image.src = `/.proxy/osm/${mapZoom}/${tileX}/${tileY}.png`;
+            image.src = mapLayer === 'street'
+                ? `/.proxy/osm/${mapZoom}/${tileX}/${tileY}.png`
+                : `/.proxy/esri/ArcGIS/rest/services/World_Imagery/MapServer/tile/${mapZoom}/${tileY}/${tileX}`;
             image.referrerPolicy = 'no-referrer-when-downgrade';
             image.style.left = `${column * tileSize - center.x + width / 2}px`;
             image.style.top = `${row * tileSize - center.y + height / 2}px`;
-            liveMap.append(image);
+            mapScene.append(image);
         }
     }
     const centerMarker = document.createElement('div');
@@ -199,7 +212,8 @@ function renderLiveMap() {
         playerMarker.title = 'Your aircraft';
         playerMarker.style.left = `${playerPoint.x - center.x + width / 2}px`;
         playerMarker.style.top = `${playerPoint.y - center.y + height / 2}px`;
-        liveMap.append(playerMarker);
+        playerMarker.style.transform = `translate(-50%, -50%) rotate(${run.heading}deg)`;
+        mapScene.append(playerMarker);
     }
     liveTraffic.forEach((aircraft, index) => {
         const point = projectMap(aircraft.lat, aircraft.lon);
@@ -213,9 +227,14 @@ function renderLiveMap() {
         label.textContent = aircraft.callsign || aircraft.registration || aircraft.type;
         marker.append(label);
         marker.addEventListener('click', () => selectAircraft(aircraft));
-        liveMap.append(marker);
+        mapScene.append(marker);
     });
-    mapStatus.textContent = `${liveTraffic.length} CONTACTS / 15S CACHE`;
+    updateMapOrientation();
+    mapStatus.textContent = `${mapLayer === 'street' ? 'OPENSTREETMAP' : 'ESRI SATELLITE'} / ${liveTraffic.length} CONTACTS`;
+}
+
+function updateMapOrientation() {
+    if (mapScene) mapScene.style.transform = `rotate(${run ? -run.heading : 0}deg)`;
 }
 
 function selectAircraft(aircraft) {
@@ -230,6 +249,7 @@ setInterval(refreshTraffic, 15000);
 setInterval(() => {
     if (run) {
         mapCenter = { lat: run.lat, lon: run.lon };
+        updateMapOrientation();
         if (!mapPanel.classList.contains('hidden')) renderLiveMap();
     }
 }, 2000);
@@ -274,6 +294,7 @@ function frame(now) {
     }
     draw(width, height, elapsed);
     updateInstruments(elapsed);
+    updateMapOrientation();
     if (run.fuel <= 0) return finishRun('Fuel exhausted.');
     animationId = requestAnimationFrame(frame);
 }
