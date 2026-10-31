@@ -1,28 +1,18 @@
-# Flight Sim map proxy
+# Flight Sim map tiles
 
-The simulator uses OpenStreetMap tiles through the Discord Activities URL Mapping proxy.
+Embedded Discord Activities try the configured URL Mapping proxy first. Top-level browser visits use the provider URLs directly, and embedded clients fall back to those URLs if the proxy is unavailable.
 
-## Discord Developer Portal
+## Client tile URLs
 
-In the application settings, open **Activities > URL Mappings** and add:
-
-- Prefix: `/osm`
-- Target: `tile.openstreetmap.org`
-
-- Prefix: `/esri`
-- Target: `server.arcgisonline.com`
-
-## Client tile path
-
-Both the navigation map and terrain renderer request tiles with:
+Both the navigation map and terrain renderer use these provider URLs as the direct fallback:
 
 Street tiles:
 
-`/.proxy/osm/{z}/{x}/{y}.png`
+`https://tile.openstreetmap.org/{z}/{x}/{y}.png`
 
 Satellite tiles:
 
-`/.proxy/esri/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}`
+`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}`
 
 Attribution shown in the Activity:
 
@@ -34,4 +24,4 @@ Satellite attribution:
 
 `© Esri, Maxar, Earthstar Geographics, and the GIS User Community`
 
-If tiles fail inside Discord, check the browser Network panel for proxy errors or OSM `403` responses. OSM tile usage must remain within the provider's tile policy.
+If tiles fail, check the browser Network panel for provider errors or OSM `403` responses. OSM tile usage must remain within the provider's tile policy.

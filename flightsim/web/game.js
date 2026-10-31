@@ -56,6 +56,30 @@ let viewMode = 'cockpit';
 let localBest = Number(localStorage.getItem('flightsim-best') || 0);
 bestLabel.textContent = String(localBest).padStart(5, '0');
 
+function getMapTileUrls(zoom, tileX, tileY) {
+    const directUrl = mapLayer === 'street'
+        ? `https://tile.openstreetmap.org/${zoom}/${tileX}/${tileY}.png`
+        : `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${tileY}/${tileX}`;
+    const proxyUrl = mapLayer === 'street'
+        ? `/.proxy/osm/${zoom}/${tileX}/${tileY}.png`
+        : `/.proxy/esri/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${tileY}/${tileX}`;
+    try {
+        return window.self !== window.top ? [proxyUrl, directUrl] : [directUrl];
+    } catch {
+        return [proxyUrl, directUrl];
+    }
+}
+
+function loadMapTile(image, zoom, tileX, tileY) {
+    const urls = getMapTileUrls(zoom, tileX, tileY);
+    let attempt = 0;
+    image.addEventListener('error', () => {
+        attempt += 1;
+        if (attempt < urls.length) image.src = urls[attempt];
+    });
+    image.src = urls[attempt];
+}
+
 addEventListener('keydown', (event) => {
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'a', 'd', 'w', 's', 'A', 'D', 'W', 'S'].includes(event.key)) {
         event.preventDefault();
@@ -199,9 +223,7 @@ function renderLiveMap() {
             image.loading = 'lazy';
             const tileX = ((column % maxTile) + maxTile) % maxTile;
             const tileY = Math.max(0, Math.min(maxTile - 1, row));
-            image.src = mapLayer === 'street'
-                ? `/.proxy/osm/${mapZoom}/${tileX}/${tileY}.png`
-                : `/.proxy/esri/ArcGIS/rest/services/World_Imagery/MapServer/tile/${mapZoom}/${tileY}/${tileX}`;
+            loadMapTile(image, mapZoom, tileX, tileY);
             image.referrerPolicy = 'no-referrer-when-downgrade';
             image.style.left = `${column * tileSize - center.x + width / 2}px`;
             image.style.top = `${row * tileSize - center.y + height / 2}px`;
@@ -456,10 +478,7 @@ function getTerrainTile(column, row) {
     const key = `${mapLayer}/${terrainZoom}/${tileX}/${tileY}`;
     if (streetTileCache.has(key)) return streetTileCache.get(key);
     const image = new Image();
-    image.crossOrigin = 'anonymous';
-    image.src = mapLayer === 'street'
-        ? `/.proxy/osm/${terrainZoom}/${tileX}/${tileY}.png`
-        : `/.proxy/esri/ArcGIS/rest/services/World_Imagery/MapServer/tile/${terrainZoom}/${tileY}/${tileX}`;
+    loadMapTile(image, terrainZoom, tileX, tileY);
     streetTileCache.set(key, image);
     return image;
 }
