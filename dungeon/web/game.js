@@ -30,6 +30,9 @@ document.getElementById('back').addEventListener('click', backToMenu);
 const map = [
     '################', '#..............#', '#.####.#####...#', '#.#..#.....#...#', '#.#..#.###.#.###', '#....#...#.#...#', '###.#####.#.##.#', '#...#.....#....#', '#.###.########.#', '#.....#........#', '#.#####.######.#', '#..............#', '################',
 ];
+const arenaMap = [
+    '#################', '#.......#.......#', '#...............#', '#.......#.......#', '#...............#', '#.......#.......#', '#...............#', '#.......#.......#', '#...............#', '#.......#.......#', '#...............#', '#...............#', '#################',
+];
 const keys = new Set();
 const rays = [];
 let run = null;
@@ -49,12 +52,14 @@ addEventListener('resize', resize);
 resize();
 
 function resize() { const ratio = Math.min(devicePixelRatio || 1, 2); canvas.width = canvas.clientWidth * ratio; canvas.height = canvas.clientHeight * ratio; ctx.setTransform(ratio, 0, 0, ratio, 0, 0); }
-function isWall(x, y) { return map[Math.floor(y)]?.[Math.floor(x)] === '#'; }
+function activeMap() { return run?.level > 1 ? arenaMap : map; }
+function isWall(x, y) { return activeMap()[Math.floor(y)]?.[Math.floor(x)] === '#'; }
 function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 function randomPotions(level, occupied, gate) {
     const available = [];
-    for (let y = 1; y < map.length - 1; y += 1) {
-        for (let x = 1; x < map[y].length - 1; x += 1) {
+    const levelMap = activeMap();
+    for (let y = 1; y < levelMap.length - 1; y += 1) {
+        for (let x = 1; x < levelMap[y].length - 1; x += 1) {
             const position = { x: x + .5, y: y + .5 };
             if (!isWall(position.x, position.y) && distance(position, { x: 1.7, y: 1.7 }) > 2.2 && distance(position, gate) > 1.2 && !occupied.some((item) => distance(position, item) < 1.1)) available.push(position);
         }
@@ -66,10 +71,10 @@ function randomPotions(level, occupied, gate) {
 function levelSetup(level) {
     const enemies = level === 1
         ? [{ x: 5.3, y: 3.5, health: 2, maxHealth: 2, alive: true }, { x: 11.5, y: 7.3, health: 2, maxHealth: 2, alive: true }, { x: 7.5, y: 10.8, health: 3, maxHealth: 3, alive: true }]
-        : [{ x: 5.3, y: 3.5, health: 2, maxHealth: 2, alive: true }, { x: 11.5, y: 7.3, health: 3, maxHealth: 3, alive: true }, { x: 13.5, y: 9.5, health: 8 + level * 2, maxHealth: 8 + level * 2, alive: true, boss: true, name: level % 2 ? 'KEEP LORD' : 'IRON WARDEN' }];
+        : [{ x: 3.5, y: 2.5, health: 2, maxHealth: 2, alive: true }, { x: 13.5, y: 10.5, health: 3, maxHealth: 3, alive: true }, { x: 8.5, y: 6.5, health: 8 + level * 2, maxHealth: 8 + level * 2, alive: true, boss: true, name: level % 2 ? 'KEEP LORD' : 'IRON WARDEN' }];
     const extraPositions = [{ x: 3.5, y: 1.7 }, { x: 7.5, y: 7.5 }, { x: 13.5, y: 7.5 }, { x: 4.5, y: 11.5 }, { x: 12.5, y: 11.5 }];
     extraPositions.slice(0, Math.min(5, Math.floor((level - 1) / 2))).forEach((position) => enemies.push({ ...position, health: 2 + Math.floor(level / 3), maxHealth: 2 + Math.floor(level / 3), alive: true }));
-    const gate = { x: 14.3, y: 11.5 };
+    const gate = level === 1 ? { x: 14.3, y: 11.5 } : { x: 8.5, y: 1.5 };
     const shards = level === 1 ? [{ x: 13.4, y: 1.7, type: 'shard', taken: false }, { x: 2.5, y: 9.8, type: 'shard', taken: false }, { x: 10.5, y: 5.5, type: 'shard', taken: false }] : [];
     return { enemies, items: [...shards, ...randomPotions(level, [...shards, ...enemies], gate)], gate };
 }
@@ -83,7 +88,7 @@ function startGame() {
 function advanceLevel() {
     run.level += 1;
     const level = levelSetup(run.level);
-    run.x = 1.7; run.y = 1.7; run.angle = 0; run.health = Math.min(100, run.health + 25); run.enemies = level.enemies; run.items = level.items; run.gate = level.gate; run.gateOpenProgress = 0; run.lastStrike = 0; run.hurtAt = 0;
+    run.x = run.level > 1 ? 8.5 : 1.7; run.y = run.level > 1 ? 10.5 : 1.7; run.angle = run.level > 1 ? -Math.PI / 2 : 0; run.health = Math.min(100, run.health + 25); run.enemies = level.enemies; run.items = level.items; run.gate = level.gate; run.gateOpenProgress = 0; run.lastStrike = 0; run.hurtAt = 0;
     depthLabel.textContent = String(run.level).padStart(2, '0');
     objectiveLabel.textContent = `DEFEAT THE ${level.enemies.find((enemy) => enemy.boss).name}`;
     statusLabel.textContent = `Level ${run.level}: the ${level.enemies.find((enemy) => enemy.boss).name} waits below.`;
@@ -146,7 +151,7 @@ function draw() {
     const width = canvas.clientWidth; const height = canvas.clientHeight; const horizon = height * .48; ctx.clearRect(0, 0, width, height); const sky = ctx.createLinearGradient(0, 0, 0, horizon); sky.addColorStop(0, '#101a2b'); sky.addColorStop(1, '#49303f'); ctx.fillStyle = sky; ctx.fillRect(0, 0, width, horizon); const floor = ctx.createLinearGradient(0, horizon, 0, height); floor.addColorStop(0, '#293b43'); floor.addColorStop(1, '#0a121b'); ctx.fillStyle = floor; ctx.fillRect(0, horizon, width, height - horizon); drawCellarFloor(width, height, horizon); const fov = Math.PI / 3; const columnWidth = Math.max(2, width / 360); rays.length = 0;
     for (let x = 0; x < width; x += columnWidth) { const rayAngle = run.angle - fov / 2 + (x / width) * fov; const raw = cast(rayAngle); const corrected = raw * Math.cos(rayAngle - run.angle); const wallHeight = Math.min(height * 1.5, height * .78 / Math.max(.08, corrected)); const light = Math.max(.25, 1 - corrected / 13); const tone = Math.floor(x / columnWidth) % 4; const stone = [[105, 76, 65], [57, 78, 89], [87, 67, 91], [72, 83, 78]][tone]; const wallColor = `rgb(${Math.round(stone[0] * light + 8)}, ${Math.round(stone[1] * light + 8)}, ${Math.round(stone[2] * light + 9)})`; ctx.fillStyle = wallColor; ctx.fillRect(x, horizon - wallHeight / 2, columnWidth + 1, wallHeight); rays.push({ x, distance: corrected }); }
     const sprites = [...run.items.filter((item) => !item.taken), ...run.enemies.filter((enemy) => enemy.alive).map((enemy) => ({ ...enemy, type: 'enemy' })), { ...run.gate, type: 'gate' }].map((sprite) => { const dx = sprite.x - run.x; const dy = sprite.y - run.y; const relative = Math.atan2(Math.sin(Math.atan2(dy, dx) - run.angle), Math.cos(Math.atan2(dy, dx) - run.angle)); return { sprite, relative, distance: Math.hypot(dx, dy), depth: Math.cos(relative) * Math.hypot(dx, dy) }; }).filter((item) => Math.abs(item.relative) < fov * .65 && item.depth > .15).sort((a, b) => b.depth - a.depth);
-    sprites.forEach(({ sprite, relative, depth }) => { const screenX = width / 2 + Math.tan(relative) / Math.tan(fov / 2) * width / 2; const size = sprite.type === 'gate' ? Math.min(height * 1.5, height * 1.1 / depth) : Math.min(height * 1.1, height * .7 / depth); const centerY = sprite.type === 'gate' ? horizon + size * .35 : horizon + Math.sin((performance.now() / 400) + sprite.x) * 3; const visibleWall = rays[Math.min(rays.length - 1, Math.max(0, Math.floor(screenX / width * rays.length)))]; if (!visibleWall || depth > visibleWall.distance + .2) return; if (sprite.type === 'enemy') { if (sprite.boss) drawBoss(screenX, centerY, size); else drawEnemy(screenX, centerY, size); } else if (sprite.type === 'shard') drawShard(screenX, centerY, size); else if (sprite.type === 'potion') drawPotion(screenX, centerY, size); else if (sprite.type === 'weapon') drawWeapon(screenX, centerY, size); else drawGate(screenX, centerY, size, sprite); });
+    sprites.forEach(({ sprite, relative, depth }) => { const screenX = width / 2 + Math.tan(relative) / Math.tan(fov / 2) * width / 2; const size = sprite.type === 'gate' ? Math.min(height * 1.5, height * 1.1 / depth) : Math.min(height * 1.1, height * .7 / depth); const centerY = sprite.type === 'gate' ? horizon + size * .35 : horizon + Math.sin((performance.now() / 400) + sprite.x) * 3; const visibleWall = rays[Math.min(rays.length - 1, Math.max(0, Math.floor(screenX / width * rays.length)))]; if (!visibleWall || (sprite.type !== 'gate' && depth > visibleWall.distance + .2)) return; if (sprite.type === 'enemy') { if (sprite.boss) drawBoss(screenX, centerY, size); else drawEnemy(screenX, centerY, size); } else if (sprite.type === 'shard') drawShard(screenX, centerY, size); else if (sprite.type === 'potion') drawPotion(screenX, centerY, size); else if (sprite.type === 'weapon') drawWeapon(screenX, centerY, size); else drawGate(screenX, centerY, size, sprite); });
 }
 function drawEnemy(x, y, size) { ctx.save(); ctx.translate(x, y); ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(0, size * .38, size * .25, size * .08, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#211d2b'; ctx.beginPath(); ctx.arc(0, -size * .14, size * .18, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#8f3034'; ctx.fillRect(-size * .14, -size * .2, size * .07, size * .04); ctx.fillRect(size * .07, -size * .2, size * .07, size * .04); ctx.fillStyle = '#4d3441'; ctx.beginPath(); ctx.moveTo(-size * .18, size * .3); ctx.lineTo(-size * .1, -size * .03); ctx.lineTo(size * .1, -size * .03); ctx.lineTo(size * .18, size * .3); ctx.closePath(); ctx.fill(); ctx.restore(); }
 function drawBoss(x, y, size) { ctx.save(); ctx.translate(x, y); ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.beginPath(); ctx.ellipse(0, size * .42, size * .38, size * .1, 0, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 18; ctx.shadowColor = '#e76742'; ctx.fillStyle = '#3a1720'; ctx.beginPath(); ctx.arc(0, -size * .18, size * .27, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#e76742'; ctx.fillRect(-size * .18, -size * .25, size * .1, size * .06); ctx.fillRect(size * .08, -size * .25, size * .1, size * .06); ctx.shadowBlur = 0; ctx.fillStyle = '#6e2730'; ctx.beginPath(); ctx.moveTo(-size * .3, size * .36); ctx.lineTo(-size * .2, -size * .03); ctx.lineTo(size * .2, -size * .03); ctx.lineTo(size * .3, size * .36); ctx.closePath(); ctx.fill(); ctx.restore(); }
