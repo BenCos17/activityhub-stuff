@@ -1,0 +1,382 @@
+:root {
+    color-scheme: dark;
+    --ink: #f0e9d8;
+    --muted: #9c978c;
+    --line: rgba(224, 193, 122, .22);
+    --gold: #d7ad58;
+    --ember: #e76742;
+    --deep: #08090d;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #08090d;
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: .18;
+    background-image: linear-gradient(rgba(215, 173, 88, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(215, 173, 88, .08) 1px, transparent 1px);
+    background-size: 44px 44px;
+}
+
+button {
+    font: inherit;
+    cursor: pointer;
+}
+
+.game-shell {
+    width: min(1120px, calc(100% - 28px));
+    margin: 0 auto;
+    padding: 18px 0;
+}
+
+.game-window {
+    position: relative;
+    height: min(88vh, 760px);
+    min-height: 480px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: #11121a;
+    box-shadow: 0 24px 80px #000;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: auto;
+}
+
+.topbar,
+.bottom-hud {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    background: linear-gradient(180deg, rgba(5, 6, 9, .9), transparent);
+}
+
+.topbar {
+    top: 0;
+}
+
+.brand,
+.readouts {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sigil {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: 20px;
+}
+
+.brand strong,
+.brand small,
+.readouts span,
+.stat span,
+.eyebrow,
+.controls {
+    display: block;
+    letter-spacing: 1.8px;
+}
+
+.brand strong {
+    font-size: 13px;
+}
+
+.brand small,
+.readouts span,
+.stat span {
+    color: var(--muted);
+    font: 10px Consolas, monospace;
+}
+
+.readouts {
+    gap: 20px;
+}
+
+.readouts b {
+    color: var(--gold);
+    font: 15px Consolas, monospace;
+}
+
+.exit {
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    background: transparent;
+    color: var(--muted);
+    font: 10px Consolas, monospace;
+    letter-spacing: 1px;
+}
+
+.objective {
+    position: absolute;
+    z-index: 2;
+    top: 92px;
+    left: 24px;
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    color: #d9c9a7;
+    font: 10px Consolas, monospace;
+    letter-spacing: 1.3px;
+}
+
+.dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ember);
+    box-shadow: 0 0 15px var(--ember);
+}
+
+.crosshair {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    z-index: 2;
+    width: 24px;
+    height: 24px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    opacity: .75;
+}
+
+.crosshair i {
+    position: absolute;
+    background: rgba(240, 233, 216, .8);
+}
+
+.crosshair i:first-child {
+    left: 11px;
+    top: 3px;
+    width: 2px;
+    height: 18px;
+}
+
+.crosshair i:last-child {
+    left: 3px;
+    top: 11px;
+    width: 18px;
+    height: 2px;
+}
+
+.bottom-hud {
+    top: auto;
+    bottom: 0;
+    gap: 30px;
+    align-items: end;
+    background: linear-gradient(0deg, rgba(5, 6, 9, .95), transparent);
+}
+
+.stat {
+    min-width: 150px;
+}
+
+.stat strong {
+    display: block;
+    margin-top: 5px;
+    color: var(--ink);
+    font: 21px Consolas, monospace;
+}
+
+.stat i {
+    display: block;
+    width: 150px;
+    height: 3px;
+    margin-top: 8px;
+    background: rgba(255, 255, 255, .15);
+}
+
+.stat em {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--ember);
+}
+
+.gold strong {
+    color: var(--gold);
+}
+
+.score {
+    margin-left: auto;
+    text-align: right;
+}
+
+.score strong {
+    color: #fff;
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    padding: 30px;
+    text-align: center;
+    background: radial-gradient(circle at center, rgba(30, 26, 28, .55), rgba(5, 6, 9, .93) 70%);
+}
+
+.hidden {
+    display: none;
+}
+
+.eyebrow {
+    margin: 0 0 16px;
+    color: var(--gold);
+    font: 10px Consolas, monospace;
+}
+
+.overlay h1 {
+    margin: 0;
+    color: #eee5d2;
+    font-size: clamp(42px, 8vw, 92px);
+    font-weight: normal;
+    line-height: .83;
+    letter-spacing: 4px;
+}
+
+.overlay h1 em {
+    color: var(--gold);
+    font-style: normal;
+}
+
+.intro {
+    max-width: 390px;
+    margin: 26px 0 18px;
+    color: #b6b0a4;
+    line-height: 1.6;
+}
+
+.controls {
+    color: var(--muted);
+    font: 10px Consolas, monospace;
+}
+
+.controls kbd {
+    margin: 0 4px;
+    padding: 5px 7px;
+    border: 1px solid var(--line);
+    color: var(--ink);
+}
+
+.primary {
+    margin-top: 28px;
+    border: 1px solid var(--gold);
+    padding: 14px 22px;
+    background: var(--gold);
+    color: #14100a;
+    font: 700 11px Consolas, monospace;
+    letter-spacing: 1px;
+}
+
+.primary:hover {
+    background: #f0d184;
+}
+
+.final-score {
+    color: var(--gold);
+    font: 12px Consolas, monospace;
+    letter-spacing: 1px;
+}
+
+.final-score b {
+    color: #fff;
+    font-size: 22px;
+}
+
+.final-score span {
+    margin-left: 18px;
+    color: var(--muted);
+}
+
+.status {
+    position: absolute;
+    z-index: 3;
+    bottom: 91px;
+    left: 50%;
+    margin: 0;
+    transform: translateX(-50%);
+    color: rgba(240, 233, 216, .7);
+    font: 10px Consolas, monospace;
+    letter-spacing: .8px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .game-shell {
+        width: 100%;
+        padding: 0;
+    }
+
+    .game-window {
+        min-height: 100vh;
+        height: 100vh;
+        border: 0;
+    }
+
+    .topbar,
+    .bottom-hud {
+        padding: 16px;
+    }
+
+    .brand small {
+        display: none;
+    }
+
+    .readouts {
+        gap: 9px;
+    }
+
+    .stat {
+        min-width: 0;
+    }
+
+    .stat i {
+        width: 90px;
+    }
+
+    .stat strong {
+        font-size: 16px;
+    }
+
+    .bottom-hud {
+        gap: 12px;
+    }
+
+    .status {
+        bottom: 82px;
+        max-width: 90%;
+        overflow: hidden;
+    }
+
+    .objective {
+        top: 76px;
+        left: 16px;
+    }
+}

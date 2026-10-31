@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dungeon Crawler</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <main class="game-shell">
+        <section class="game-window">
+            <canvas id="game" aria-label="First-person dungeon view"></canvas>
+            <header class="topbar">
+                <div class="brand"><span class="sigil">✦</span><span><strong>THE SUNKEN KEEP</strong><small>RUN 07 /
+                            LOWER RUINS</small></span></div>
+                <div class="readouts"><span>TIME <b id="timer">90</b></span><span>DEPTH <b
+                            id="depth">01</b></span><button id="back" class="exit" type="button">EXIT</button></div>
+            </header>
+            <div class="crosshair" aria-hidden="true"><i></i><i></i></div>
+            <div class="objective"><span class="dot"></span><span id="objective">FIND THE RELIC</span></div>
+            <div class="bottom-hud">
+                <div class="stat"><span>VITALITY</span><strong id="health">100</strong><i><em
+                            id="health-meter"></em></i></div>
+                <div class="stat gold"><span>RELIC SHARDS</span><strong id="shards">0 / 3</strong></div>
+                <div class="stat score"><span>SCORE</span><strong id="score">00000</strong></div>
+            </div>
+            <div id="start-panel" class="overlay">
+                <p class="eyebrow">A SHORT DESCENT INTO DARKNESS</p>
+                <h1>THE SUNKEN<br /><em>KEEP</em></h1>
+                <p class="intro">Three shards lie beneath the old chapel. Take the relic, then find the iron gate before
+                    the bell tolls.</p>
+                <p class="controls"><kbd>WASD</kbd> move <kbd>MOUSE</kbd> look <kbd>CLICK</kbd> strike</p>
+                <button id="start" class="primary" type="button">ENTER THE KEEP</button>
+            </div>
+            <div id="end-panel" class="overlay hidden">
+                <p id="result-kicker" class="eyebrow">THE KEEP REMEMBERS</p>
+                <h1 id="result-title">ESCAPED.</h1>
+                <p id="result-copy" class="intro">The relic is yours.</p>
+                <div class="final-score">SCORE <b id="final-score">00000</b><span>BEST <b id="best">00000</b></span>
+                </div>
+                <button id="again" class="primary" type="button">DESCEND AGAIN</button>
+            </div>
+            <p id="status" class="status">The torches wait in silence.</p>
+        </section>
+    </main>
+    <script type="module" src="game.js"></script>
+</body>
+
+</html>

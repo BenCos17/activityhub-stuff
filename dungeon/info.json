@@ -1,0 +1,17 @@
+{
+    "author": [
+        "ActivityHub community"
+    ],
+    "short": "Explore a haunted dungeon, defeat its guardian, and escape with the relic.",
+    "description": "A first-person 3D dungeon crawler for ActivityHub with procedural rooms, combat, treasure, and a timed escape.",
+    "end_user_data_statement": "This cog stores the best dungeon score submitted by each player.",
+    "install_msg": "Dungeon Crawler needs the ActivityHub cog to be loaded first.",
+    "requirements": [],
+    "tags": [
+        "activityhub",
+        "games",
+        "dungeon",
+        "action"
+    ],
+    "type": "COG"
+}
