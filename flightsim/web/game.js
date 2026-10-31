@@ -499,8 +499,9 @@ function drawStreetMapGround(width, height, horizon) {
     ctx.beginPath();
     ctx.rect(0, horizon, width, height - horizon);
     ctx.clip();
-    ctx.translate(width / 2, horizon + 16);
+    ctx.translate(width / 2, horizon);
     ctx.rotate(-run.heading * Math.PI / 180);
+    ctx.scale(1.0, 0.4);
     ctx.translate(-center.x, -center.y);
     for (let row = startRow; row <= endRow; row += 1) {
         for (let column = startColumn; column <= endColumn; column += 1) {
