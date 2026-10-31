@@ -81,9 +81,9 @@ resize();
 function startGame() {
     startPanel.classList.add('hidden');
     endPanel.classList.add('hidden');
-    run = { started: performance.now(), lastCloud: 0, score: 0, fuel: 100, altitude: 800, speed: 120, heading: 90, pitch: 0, lat: mapCenter.lat, lon: mapCenter.lon, distance: 0, clouds: [] };
-    phaseLabel.textContent = 'SANDBOX';
-    statusLabel.textContent = 'Free flight ready. Throttle and pitch are yours.';
+    run = { started: performance.now(), lastCloud: 0, score: 0, fuel: 100, altitude: 0, speed: 0, heading: 90, pitch: 0, lat: mapCenter.lat, lon: mapCenter.lon, distance: 0, clouds: [], phase: 'TAKEOFF', runway: 0 };
+    phaseLabel.textContent = 'TAKEOFF';
+    statusLabel.textContent = 'Advance throttle to begin the takeoff roll.';
     cancelAnimationFrame(animationId);
     lastFrame = performance.now();
     refreshTraffic();
@@ -222,11 +222,11 @@ function frame(now) {
     const steering = (keys.has('arrowright') || keys.has('d') ? 1 : 0) - (keys.has('arrowleft') || keys.has('a') ? 1 : 0);
     const throttle = (keys.has('w') || keys.has('arrowup') ? 1 : 0) - (keys.has('s') || keys.has('arrowdown') ? 1 : 0);
     const pitchInput = (keys.has('arrowup') ? 1 : 0) - (keys.has('arrowdown') ? 1 : 0);
-    run.heading = (run.heading + steering * 75 * delta + 360) % 360;
+    run.heading = (run.heading + steering * (run.phase === 'LANDING' ? 42 : 75) * delta + 360) % 360;
     run.pitch += (pitchInput * 32 - run.pitch * 2.8) * delta;
     run.pitch = Math.max(-18, Math.min(18, run.pitch));
-    run.speed = Math.max(45, Math.min(520, run.speed + throttle * 150 * delta - (run.speed - 180) * .035 * delta));
-    const verticalSpeed = run.pitch * 55;
+    run.speed = Math.max(0, Math.min(520, run.speed + throttle * 150 * delta - (run.speed - 180) * .035 * delta));
+    const verticalSpeed = run.speed < 70 ? 0 : run.pitch * 55;
     run.altitude = Math.max(0, Math.min(20000, run.altitude + verticalSpeed * delta));
     run.fuel = Math.max(0, run.fuel - (.08 + run.speed / 9000) * delta);
     const distanceNm = run.speed * delta / 3600;
@@ -241,6 +241,15 @@ function frame(now) {
     run.clouds.forEach((cloud) => cloud.y += cloud.speed * delta);
     run.clouds = run.clouds.filter((cloud) => cloud.y < height + 40);
     run.score = Math.floor(elapsed * 120 + run.altitude * .05 + run.speed * .2);
+    if (run.phase === 'TAKEOFF' && run.speed >= 95) run.phase = 'CLIMB';
+    if (run.phase === 'CLIMB' && run.altitude >= 2500) run.phase = 'CRUISE';
+    if (run.phase === 'CRUISE' && elapsed >= 35) run.phase = 'LANDING';
+    if (run.phase === 'LANDING') {
+        run.runway = Math.min(100, run.runway + delta * 5);
+        if (run.runway >= 100 && run.altitude < 90 && run.speed >= 65 && run.speed <= 155 && Math.abs(run.pitch) < 5) {
+            return finishRun('Landing complete.');
+        }
+    }
     draw(width, height, elapsed);
     updateInstruments(elapsed);
     if (run.fuel <= 0) return finishRun('Fuel exhausted.');
@@ -254,20 +263,64 @@ function updateInstruments(elapsed) {
     fuelLabel.textContent = String(Math.round(run.fuel)).padStart(3, '0');
     headingLabel.textContent = `${String(Math.round(run.heading)).padStart(3, '0')}°`;
     scoreLabel.textContent = String(run.score).padStart(5, '0');
-    timerLabel.textContent = `FLIGHT ${elapsed.toFixed(1)}`;
+    timerLabel.textContent = elapsed.toFixed(1);
     if (altitudeMeter) altitudeMeter.style.width = `${Math.min(100, run.altitude / 12)}%`;
     if (speedMeter) speedMeter.style.width = `${Math.min(100, run.speed / 5)}%`;
     if (fuelMeter) fuelMeter.style.height = `${run.fuel}%`;
     if (engineValue) engineValue.textContent = String(Math.round(Math.min(100, run.speed / 4.6)));
     if (engineMeter) engineMeter.style.height = `${Math.min(100, run.speed / 4.6)}%`;
     if (verticalValue) verticalValue.textContent = String(Math.round(run.pitch * 55)).padStart(3, '0');
-    phaseLabel.textContent = 'SANDBOX';
-    statusLabel.textContent = run.fuel < 20 ? 'LOW FUEL. Find a runway.' : `Free flight / ${run.pitch > 2 ? 'climbing' : run.pitch < -2 ? 'descending' : 'level flight'}.`;
+    phaseLabel.textContent = run.phase;
+    const attitude = run.pitch > 2 ? 'climbing' : run.pitch < -2 ? 'descending' : 'level flight';
+    statusLabel.textContent = run.fuel < 20 ? 'LOW FUEL. Land immediately.' : run.phase === 'LANDING'
+        ? `Runway approach ${Math.round(run.runway)}% / ${attitude}.`
+        : `${run.phase.toLowerCase()} / ${attitude}.`;
 }
 
 function draw(width, height, elapsed) {
     ctx.clearRect(0, 0, width, height);
-    drawTopDown(width, height, elapsed);
+    drawCockpit(width, height, elapsed);
+    drawLiveTraffic(width, height);
+}
+
+function drawCockpit(width, height, elapsed) {
+    const horizon = height * .42 - run.pitch * 3;
+    const sky = ctx.createLinearGradient(0, 0, 0, horizon);
+    sky.addColorStop(0, '#173d52');
+    sky.addColorStop(1, '#79b5bf');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, horizon);
+    drawTerrain(width, height, horizon, elapsed);
+
+    ctx.save();
+    ctx.translate(width / 2, horizon);
+    ctx.strokeStyle = 'rgba(246, 245, 208, .6)';
+    ctx.lineWidth = 2;
+    for (let index = -3; index <= 3; index += 1) {
+        const offset = index * 36 + run.pitch * 4;
+        ctx.beginPath();
+        ctx.moveTo(-Math.max(14, 90 - Math.abs(index) * 12), offset);
+        ctx.lineTo(Math.max(14, 90 - Math.abs(index) * 12), offset);
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    const centerX = width / 2;
+    const centerY = height * .48;
+    ctx.strokeStyle = 'rgba(255, 255, 255, .72)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(centerX - 40, centerY); ctx.lineTo(centerX - 12, centerY);
+    ctx.moveTo(centerX + 12, centerY); ctx.lineTo(centerX + 40, centerY);
+    ctx.moveTo(centerX, centerY - 14); ctx.lineTo(centerX, centerY + 14);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(8, 28, 37, .68)';
+    ctx.fillRect(18, 18, 190, 53);
+    ctx.fillStyle = '#e8f4dc';
+    ctx.font = '10px Consolas, monospace';
+    ctx.fillText('FORWARD VIEW / ' + run.phase, 30, 38);
+    ctx.fillStyle = '#b9ed78';
+    ctx.fillText(`${run.lat.toFixed(3)}  ${run.lon.toFixed(3)}  /  ${run.distance.toFixed(1)} NM`, 30, 56);
 }
 
 function drawTopDown(width, height, elapsed) {

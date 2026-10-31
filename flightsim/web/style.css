@@ -2,6 +2,7 @@
     color-scheme: dark;
     --ink: #f5f8f3;
     --muted: rgba(236, 244, 235, .68);
+    --panel: rgba(8, 29, 39, .68);
     --green: #b9ed78;
     --yellow: #ffdc65;
     --cyan: #72e4ee;
@@ -15,7 +16,7 @@ body {
     margin: 0;
     min-height: 100vh;
     overflow: hidden;
-    background: #79a9c4;
+    background: #0b2734;
     color: var(--ink);
     font-family: 'Segoe UI', sans-serif;
 }
@@ -34,7 +35,8 @@ button {
 .sim-window {
     position: relative;
     overflow: hidden;
-    background: #6d9eb9;
+    background: #173d52;
+    isolation: isolate;
 }
 
 #game {
@@ -93,6 +95,9 @@ button {
     display: flex;
     gap: 8px;
     align-items: baseline;
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, .24);
+    background: rgba(8, 29, 39, .38);
     color: rgba(255, 255, 255, .75);
     font: 9px Consolas, monospace;
     letter-spacing: 1px;
@@ -135,13 +140,16 @@ button {
     height: 38px;
     border: 0;
     border-radius: 3px;
-    background: rgba(31, 78, 112, .68);
+    border: 1px solid rgba(255, 255, 255, .18);
+    background: var(--panel);
     color: white;
     font-size: 17px;
 }
 
 .tool.active {
-    background: #3bb7e8;
+    border-color: var(--cyan);
+    background: rgba(44, 128, 147, .88);
+    box-shadow: 0 0 18px rgba(114, 228, 238, .2);
 }
 
 .tool small {
@@ -287,7 +295,8 @@ button {
     height: 146px;
     border: 1px solid rgba(255, 255, 255, .68);
     border-radius: 50%;
-    background: rgba(11, 31, 38, .16);
+    background: rgba(11, 31, 38, .38);
+    box-shadow: inset 0 0 0 8px rgba(8, 29, 39, .14), 0 10px 24px rgba(0, 16, 22, .18);
     text-shadow: 0 1px 3px #1a3f49;
 }
 
@@ -316,6 +325,29 @@ button {
     border-left-color: var(--green);
     border-radius: 50%;
     transform: rotate(-25deg);
+}
+
+.gauge-progress {
+    position: absolute;
+    right: 18px;
+    bottom: 43px;
+    left: 18px;
+    height: 3px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, .18);
+    transform: rotate(-25deg);
+}
+
+.gauge-progress i {
+    display: block;
+    width: 24%;
+    height: 100%;
+    background: var(--green);
+    transition: width .12s linear;
+}
+
+.altitude-progress i {
+    background: var(--cyan);
 }
 
 .gauge-ticks {
@@ -571,7 +603,7 @@ button {
     place-content: center;
     justify-items: center;
     padding: 30px;
-    background: rgba(10, 35, 43, .63);
+    background: linear-gradient(135deg, rgba(7, 27, 38, .84), rgba(11, 52, 59, .64));
     text-align: center;
 }
 
@@ -579,7 +611,8 @@ button {
     margin: 7px 0 12px;
     font-size: clamp(2.5rem, 6vw, 5rem);
     line-height: .9;
-    letter-spacing: -2px;
+    letter-spacing: 0;
+    text-shadow: 0 8px 30px rgba(0, 0, 0, .35);
 }
 
 .overlay p:not(.kicker) {
@@ -608,10 +641,13 @@ kbd {
     color: #16313a;
     font-weight: 800;
     letter-spacing: 1px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
+    transition: transform .18s ease, background .18s ease;
 }
 
 .primary-button:hover {
     background: white;
+    transform: translateY(-2px);
 }
 
 .hidden {
@@ -622,10 +658,23 @@ kbd {
     .topbar {
         left: 14px;
         right: 14px;
+        align-items: center;
+    }
+
+    .top-readout {
+        position: absolute;
+        top: 52px;
+        right: 0;
     }
 
     .toolbar {
         top: 86px;
+        gap: 4px;
+    }
+
+    .tool {
+        width: 34px;
+        height: 34px;
     }
 
     .compass-overlay {
@@ -659,11 +708,13 @@ kbd {
         right: 12px;
         bottom: 15px;
         left: 12px;
+        gap: 6px;
     }
 
     .gauge {
         width: 105px;
         height: 105px;
+        flex: 0 0 105px;
     }
 
     .gauge strong {
@@ -699,5 +750,10 @@ kbd {
 
     .map-panel {
         inset: 16% 5% 24%;
+    }
+
+    .overlay h1 {
+        max-width: 320px;
+        font-size: clamp(2.4rem, 13vw, 4rem);
     }
 }

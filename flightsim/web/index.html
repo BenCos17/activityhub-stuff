@@ -15,8 +15,8 @@
             <header class="topbar">
                 <div class="brand"><span class="brand-mark">✈</span><span><strong>FLIGHT SIM</strong><small>FS-042 /
                             TRAINING SORTIE</small></span></div>
-                <div class="top-readout"><span>FLIGHT</span><b id="phase">PREFLIGHT</b><span>TIME</span><b
-                        id="timer">60.0</b></div>
+                <div class="top-readout"><span>PHASE</span><b id="phase">PREFLIGHT</b><span>TIME</span><b
+                        id="timer">0.0</b></div>
                 <button id="back" class="icon-button" type="button" title="Return to the ActivityHub menu">EXIT</button>
             </header>
             <nav class="toolbar" aria-label="Simulator controls">
@@ -38,6 +38,7 @@
                 <div class="gauge airspeed-gauge"><span class="gauge-title">AIRSPEED</span><strong><b
                             id="speed">000</b><small> KTS</small></strong>
                     <div class="arc"></div>
+                    <div class="gauge-progress"><i id="speed-meter"></i></div>
                     <div class="gauge-ticks">40&nbsp;&nbsp; 80&nbsp;&nbsp; 120&nbsp;&nbsp; 160&nbsp;&nbsp; 200</div>
                 </div>
                 <div class="engine-stack">
@@ -49,6 +50,7 @@
                 <div class="gauge altitude-gauge"><span class="gauge-title">ALTITUDE</span><strong><b
                             id="altitude">0000</b><small> FEET</small></strong>
                     <div class="arc"></div>
+                    <div class="gauge-progress altitude-progress"><i id="altitude-meter"></i></div>
                     <div class="gauge-ticks">0&nbsp;&nbsp; 2&nbsp;&nbsp; 4&nbsp;&nbsp; 6&nbsp;&nbsp; 8</div>
                 </div>
                 <div class="vertical-gauge"><span>V.SPEED</span><strong>+<b
@@ -71,8 +73,9 @@
             <div id="start-panel" class="overlay">
                 <p class="kicker">ATC CLEARANCE RECEIVED</p>
                 <h1>Take the controls.</h1>
-                <p>Move forward with <kbd>W</kbd> or <kbd>↑</kbd>. Brake with <kbd>S</kbd> or <kbd>↓</kbd>. Steer with
-                    <kbd>A</kbd> <kbd>D</kbd>. Explore freely.
+                <p>Throttle with <kbd>W</kbd>. Pitch with <kbd>↑</kbd> <kbd>↓</kbd>. Bank with <kbd>A</kbd>
+                    <kbd>D</kbd>.
+                    Reach cruise, then slow down and settle the approach.
                 </p><button id="start" class="primary-button" type="button">START
                     FLIGHT</button>
             </div>
