@@ -144,6 +144,43 @@ canvas {
     letter-spacing: 1.3px;
 }
 
+.boss-hud {
+    position: absolute;
+    z-index: 2;
+    top: 118px;
+    left: 24px;
+    width: min(300px, calc(100% - 48px));
+    color: var(--ember);
+    font: 10px Consolas, monospace;
+    letter-spacing: 1.3px;
+}
+
+.boss-hud span,
+.boss-hud strong {
+    display: inline-block;
+}
+
+.boss-hud strong {
+    float: right;
+    color: var(--ink);
+    font-weight: normal;
+}
+
+.boss-hud i {
+    display: block;
+    height: 5px;
+    margin-top: 7px;
+    background: rgba(255, 255, 255, .18);
+}
+
+.boss-hud em {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--ember);
+    box-shadow: 0 0 12px rgba(231, 103, 66, .7);
+}
+
 .dot {
     width: 7px;
     height: 7px;
@@ -375,8 +412,14 @@ canvas {
         overflow: hidden;
     }
 
-    .objective {
+    .objective,
+    .boss-hud {
         top: 76px;
         left: 16px;
+    }
+
+    .boss-hud {
+        top: 102px;
+        width: calc(100% - 32px);
     }
 }
