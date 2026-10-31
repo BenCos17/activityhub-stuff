@@ -1,0 +1,415 @@
+:root {
+    color-scheme: dark;
+    --ink: #f5eee2;
+    --muted: #9c9b9d;
+    --line: rgba(246, 93, 66, .3);
+    --red: #f65d42;
+    --orange: #ffb657;
+    --cyan: #62d5cb;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--ink);
+    background: #0b0c11;
+    font-family: Georgia, 'Times New Roman', serif;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: .16;
+    background-image: linear-gradient(rgba(246, 93, 66, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(246, 93, 66, .08) 1px, transparent 1px);
+    background-size: 38px 38px;
+}
+
+button {
+    font: inherit;
+    cursor: pointer;
+}
+
+.shell {
+    width: min(1180px, calc(100% - 28px));
+    margin: 0 auto;
+    padding: 18px 0;
+}
+
+.game-window {
+    position: relative;
+    height: min(88vh, 780px);
+    min-height: 480px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: #12151c;
+    box-shadow: 0 25px 90px #000;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.topbar,
+.bottom-hud {
+    position: absolute;
+    z-index: 3;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    background: linear-gradient(180deg, rgba(7, 8, 12, .94), transparent);
+}
+
+.topbar {
+    top: 0;
+}
+
+.bottom-hud {
+    top: auto;
+    bottom: 0;
+    gap: 25px;
+    align-items: end;
+    background: linear-gradient(0deg, rgba(7, 8, 12, .97), transparent);
+}
+
+.brand,
+.readouts {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mark {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--red);
+    color: var(--red);
+    font-size: 21px;
+}
+
+.brand strong {
+    display: block;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+}
+
+.brand small,
+.readouts span,
+.stat span,
+.weapon span,
+.score span,
+.eyebrow,
+.controls {
+    display: block;
+    color: var(--muted);
+    font: 10px Consolas, monospace;
+    letter-spacing: 1.4px;
+}
+
+.readouts {
+    gap: 18px;
+}
+
+.readouts b {
+    color: var(--orange);
+    font: 15px Consolas, monospace;
+}
+
+.exit {
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    background: transparent;
+    color: var(--muted);
+    font: 10px Consolas, monospace;
+    letter-spacing: 1px;
+}
+
+.objective {
+    position: absolute;
+    z-index: 3;
+    top: 92px;
+    left: 24px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #e6c6b5;
+    font: 10px Consolas, monospace;
+    letter-spacing: 1.3px;
+}
+
+.pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 16px var(--red);
+}
+
+.boss-hud {
+    position: absolute;
+    z-index: 3;
+    top: 118px;
+    left: 24px;
+    width: min(300px, calc(100% - 48px));
+    color: var(--red);
+    font: 10px Consolas, monospace;
+    letter-spacing: 1px;
+}
+
+.boss-hud strong {
+    float: right;
+    color: var(--ink);
+    font-weight: normal;
+}
+
+.boss-hud i,
+.stat i {
+    display: block;
+    height: 4px;
+    margin-top: 7px;
+    background: rgba(255, 255, 255, .16);
+}
+
+.boss-hud em {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--red);
+}
+
+.stat {
+    min-width: 115px;
+}
+
+.stat strong,
+.weapon strong,
+.score strong {
+    display: block;
+    margin-top: 5px;
+    font: 20px Consolas, monospace;
+}
+
+.stat i {
+    width: 115px;
+}
+
+.stat em {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--cyan);
+}
+
+.weapon strong {
+    color: var(--orange);
+    font-size: 15px;
+}
+
+.score {
+    margin-left: auto;
+    text-align: right;
+}
+
+.score strong {
+    color: #fff;
+}
+
+.crosshair {
+    position: absolute;
+    z-index: 3;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    opacity: .8;
+}
+
+.crosshair i {
+    position: absolute;
+    background: #fff;
+}
+
+.crosshair i:first-child {
+    left: 11px;
+    top: 3px;
+    width: 2px;
+    height: 18px;
+}
+
+.crosshair i:last-child {
+    left: 3px;
+    top: 11px;
+    width: 18px;
+    height: 2px;
+}
+
+.overlay {
+    position: absolute;
+    z-index: 5;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    padding: 30px;
+    text-align: center;
+    background: radial-gradient(circle at center, rgba(45, 24, 28, .58), rgba(7, 8, 12, .95) 72%);
+}
+
+.hidden {
+    display: none;
+}
+
+.overlay h1 {
+    margin: 0;
+    font-size: clamp(48px, 9vw, 105px);
+    font-weight: normal;
+    line-height: .85;
+    letter-spacing: 5px;
+}
+
+.overlay h1 span {
+    color: var(--red);
+}
+
+.intro {
+    max-width: 430px;
+    margin: 26px 0 18px;
+    color: #b6b0ae;
+    line-height: 1.55;
+}
+
+.controls kbd {
+    margin: 0 4px;
+    padding: 5px 7px;
+    border: 1px solid var(--line);
+    color: var(--ink);
+}
+
+.primary {
+    margin-top: 28px;
+    border: 1px solid var(--red);
+    padding: 14px 22px;
+    background: var(--red);
+    color: #160b0a;
+    font: 700 11px Consolas, monospace;
+    letter-spacing: 1px;
+}
+
+.primary:hover {
+    background: #ff8a68;
+}
+
+.final-score {
+    color: var(--orange);
+    font: 12px Consolas, monospace;
+    letter-spacing: 1px;
+}
+
+.final-score b {
+    color: #fff;
+    font-size: 22px;
+}
+
+.final-score span {
+    margin-left: 18px;
+    color: var(--muted);
+}
+
+.status {
+    position: absolute;
+    z-index: 4;
+    bottom: 91px;
+    left: 50%;
+    margin: 0;
+    transform: translateX(-50%);
+    color: rgba(245, 238, 226, .75);
+    font: 10px Consolas, monospace;
+    letter-spacing: .8px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+@media (max-width: 650px) {
+    .shell {
+        width: 100%;
+        padding: 0;
+    }
+
+    .game-window {
+        min-height: 100vh;
+        height: 100vh;
+        border: 0;
+    }
+
+    .topbar,
+    .bottom-hud {
+        padding: 15px;
+    }
+
+    .brand small {
+        display: none;
+    }
+
+    .readouts {
+        gap: 8px;
+    }
+
+    .bottom-hud {
+        gap: 10px;
+    }
+
+    .stat {
+        min-width: 0;
+    }
+
+    .stat i {
+        width: 75px;
+    }
+
+    .stat strong,
+    .weapon strong,
+    .score strong {
+        font-size: 14px;
+    }
+
+    .weapon strong {
+        max-width: 82px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .objective,
+    .boss-hud {
+        left: 15px;
+    }
+
+    .objective {
+        top: 75px;
+    }
+
+    .boss-hud {
+        top: 100px;
+        width: calc(100% - 30px);
+    }
+
+    .status {
+        max-width: 90%;
+        overflow: hidden;
+        bottom: 82px;
+    }
+}

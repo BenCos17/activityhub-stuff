@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NotDoom</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <main class="shell">
+        <section class="game-window">
+            <canvas id="game" aria-label="NotDoom arena shooter"></canvas>
+            <header class="topbar">
+                <div class="brand"><span class="mark">✹</span><span><strong>NOTDOOM</strong><small>SECTOR 09 / PURGE
+                            PROTOCOL</small></span></div>
+                <div class="readouts"><span>ARENA <b id="level">01</b></span><span>WAVE <b
+                            id="wave">01</b></span><button id="back" class="exit" type="button">EXIT</button></div>
+            </header>
+            <div class="crosshair"><i></i><i></i></div>
+            <div class="objective"><span class="pulse"></span><span id="objective">CLEAR THE ARENA</span></div>
+            <div class="boss-hud hidden" id="boss-hud"><span id="boss-name">ELITE</span><strong
+                    id="boss-health-label">100%</strong><i><em id="boss-meter"></em></i></div>
+            <div class="bottom-hud">
+                <div class="stat"><span>HEALTH</span><strong id="health">100</strong><i><em id="health-meter"></em></i>
+                </div>
+                <div class="stat"><span>ARMOR</span><strong id="armor">00</strong><i><em id="armor-meter"></em></i>
+                </div>
+                <div class="weapon"><span id="weapon-name">SIDEARM</span><strong id="ammo">12 / 48</strong></div>
+                <div class="score"><span>SCORE</span><strong id="score">000000</strong></div>
+            </div>
+            <div id="start-panel" class="overlay">
+                <p class="eyebrow">A FIRST-PERSON ARENA PURGE</p>
+                <h1>NOT<span>DOOM</span></h1>
+                <p class="intro">The sirens opened the lower sector. Keep moving, keep firing, and find the lift after
+                    every wave.</p>
+                <p class="controls"><kbd>WASD</kbd> move <kbd>MOUSE</kbd> aim <kbd>CLICK</kbd> fire <kbd>R</kbd> reload
+                </p>
+                <button id="start" class="primary" type="button">START PURGE</button>
+            </div>
+            <div id="end-panel" class="overlay hidden">
+                <p class="eyebrow" id="result-kicker">PURGE REPORT</p>
+                <h1 id="result-title">SECTOR CLEAR.</h1>
+                <p class="intro" id="result-copy">The lift is waiting.</p>
+                <div class="final-score">SCORE <b id="final-score">000000</b><span>BEST <b id="best">000000</b></span>
+                </div>
+                <button id="again" class="primary" type="button">RUN IT AGAIN</button>
+            </div>
+            <p id="status" class="status">Weapons cold. Arena sealed.</p>
+        </section>
+    </main>
+    <script type="module" src="game.js"></script>
+</body>
+
+</html>

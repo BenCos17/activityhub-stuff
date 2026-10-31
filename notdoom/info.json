@@ -1,0 +1,17 @@
+{
+    "author": [
+        "ActivityHub community"
+    ],
+    "short": "Blast through demon waves in a fast retro arena shooter.",
+    "description": "NotDoom is a first-person arena shooter for ActivityHub with escalating demon waves, weapons, pickups, and score chasing.",
+    "end_user_data_statement": "This cog stores the best NotDoom score submitted by each player.",
+    "install_msg": "NotDoom needs the ActivityHub cog to be loaded first.",
+    "requirements": [],
+    "tags": [
+        "activityhub",
+        "games",
+        "shooter",
+        "action"
+    ],
+    "type": "COG"
+}
