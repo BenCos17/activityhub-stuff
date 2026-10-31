@@ -182,7 +182,7 @@ function renderLiveMap() {
             image.loading = 'lazy';
             const tileX = ((column % maxTile) + maxTile) % maxTile;
             const tileY = Math.max(0, Math.min(maxTile - 1, row));
-            image.src = `https://tile.openstreetmap.org/${mapZoom}/${tileX}/${tileY}.png`;
+            image.src = `/.proxy/osm/${mapZoom}/${tileX}/${tileY}.png`;
             image.referrerPolicy = 'no-referrer-when-downgrade';
             image.style.left = `${column * tileSize - center.x + width / 2}px`;
             image.style.top = `${row * tileSize - center.y + height / 2}px`;
@@ -422,7 +422,7 @@ function getStreetTile(column, row) {
     if (streetTileCache.has(key)) return streetTileCache.get(key);
     const image = new Image();
     image.crossOrigin = 'anonymous';
-    image.src = `https://tile.openstreetmap.org/${key}.png`;
+    image.src = `/.proxy/osm/${key}.png`;
     streetTileCache.set(key, image);
     return image;
 }
