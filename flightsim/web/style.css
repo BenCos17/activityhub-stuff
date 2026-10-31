@@ -156,7 +156,7 @@ button {
     position: absolute;
     top: 45px;
     left: 50%;
-    display: none;
+    display: block;
     width: max-content;
     padding: 3px 5px;
     background: rgba(35, 74, 91, .72);
@@ -165,7 +165,24 @@ button {
 }
 
 .tool.active small {
-    display: block;
+    color: var(--green);
+}
+
+.sim-window.hud-hidden .compass-overlay,
+.sim-window.hud-hidden .waypoint,
+.sim-window.hud-hidden .flight-path,
+.sim-window.hud-hidden .lower-instruments,
+.sim-window.hud-hidden .traffic-card,
+.sim-window.hud-hidden .score-readout,
+.sim-window.hud-hidden .status {
+    visibility: hidden;
+}
+
+.sim-window.exterior-view .compass-overlay,
+.sim-window.exterior-view .waypoint,
+.sim-window.exterior-view .flight-path,
+.sim-window.exterior-view .traffic-card {
+    opacity: .7;
 }
 
 .compass-overlay {

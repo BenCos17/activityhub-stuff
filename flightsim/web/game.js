@@ -31,6 +31,9 @@ const startPanel = document.getElementById('start-panel');
 const endPanel = document.getElementById('end-panel');
 const resultTitle = document.getElementById('result-title');
 const resultCopy = document.getElementById('result-copy');
+const simWindow = document.querySelector('.sim-window');
+const viewToggle = document.getElementById('view-toggle');
+const hudToggle = document.getElementById('hud-toggle');
 
 let hub;
 try { hub = await connect(); } catch (error) { statusLabel.textContent = error.message; }
@@ -45,6 +48,7 @@ let selectedAircraft = null;
 let mapCenter = { lat: 38.84916, lon: -77.04138 };
 const mapZoom = 9;
 let mapLayer = 'satellite';
+let viewMode = 'cockpit';
 let localBest = Number(localStorage.getItem('flightsim-best') || 0);
 bestLabel.textContent = String(localBest).padStart(5, '0');
 
@@ -57,6 +61,17 @@ addEventListener('keydown', (event) => {
 addEventListener('keyup', (event) => keys.delete(event.key.toLowerCase()));
 document.getElementById('start').addEventListener('click', startGame);
 document.getElementById('again').addEventListener('click', startGame);
+viewToggle.addEventListener('click', () => {
+    viewMode = viewMode === 'cockpit' ? 'exterior' : 'cockpit';
+    simWindow.classList.toggle('exterior-view', viewMode === 'exterior');
+    viewToggle.innerHTML = viewMode === 'cockpit' ? '▣<small>COCKPIT</small>' : '◇<small>EXTERIOR</small>';
+    viewToggle.classList.add('active');
+    if (run) draw(canvas.clientWidth, canvas.clientHeight, (performance.now() - run.started) / 1000);
+});
+hudToggle.addEventListener('click', () => {
+    simWindow.classList.toggle('hud-hidden');
+    hudToggle.classList.toggle('active');
+});
 document.getElementById('map-toggle').addEventListener('click', () => {
     mapPanel.classList.toggle('hidden');
     if (!mapPanel.classList.contains('hidden')) renderLiveMap();
@@ -279,7 +294,8 @@ function updateInstruments(elapsed) {
 
 function draw(width, height, elapsed) {
     ctx.clearRect(0, 0, width, height);
-    drawCockpit(width, height, elapsed);
+    if (viewMode === 'exterior') drawExterior(width, height, elapsed);
+    else drawCockpit(width, height, elapsed);
     drawLiveTraffic(width, height);
 }
 
@@ -321,6 +337,66 @@ function drawCockpit(width, height, elapsed) {
     ctx.fillText('FORWARD VIEW / ' + run.phase, 30, 38);
     ctx.fillStyle = '#b9ed78';
     ctx.fillText(`${run.lat.toFixed(3)}  ${run.lon.toFixed(3)}  /  ${run.distance.toFixed(1)} NM`, 30, 56);
+    drawCockpitFrame(width, height);
+}
+
+function drawCockpitFrame(width, height) {
+    const bottom = height * .78;
+    const frame = ctx.createLinearGradient(0, bottom, 0, height);
+    frame.addColorStop(0, 'rgba(8, 24, 31, .12)');
+    frame.addColorStop(1, 'rgba(5, 15, 20, .92)');
+    ctx.fillStyle = frame;
+    ctx.fillRect(0, bottom, width, height - bottom);
+    ctx.strokeStyle = 'rgba(18, 30, 34, .9)';
+    ctx.lineWidth = Math.max(12, width * .018);
+    ctx.beginPath();
+    ctx.moveTo(0, bottom + 12); ctx.lineTo(width * .18, bottom - 30);
+    ctx.moveTo(width, bottom + 12); ctx.lineTo(width * .82, bottom - 30);
+    ctx.stroke();
+    ctx.fillStyle = '#17272c';
+    ctx.beginPath();
+    ctx.moveTo(0, height); ctx.lineTo(width * .18, bottom + 12); ctx.lineTo(width * .37, bottom + 6);
+    ctx.lineTo(width * .63, bottom + 6); ctx.lineTo(width * .82, bottom + 12); ctx.lineTo(width, height);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(114, 228, 238, .12)';
+    ctx.fillRect(width * .08, bottom + 26, width * .84, 2);
+    ctx.fillStyle = '#263d40';
+    ctx.fillRect(width * .44, bottom + 10, width * .12, 12);
+}
+
+function drawExterior(width, height, elapsed) {
+    const horizon = height * .46 - run.pitch * 2;
+    const sky = ctx.createLinearGradient(0, 0, 0, horizon);
+    sky.addColorStop(0, '#142f4b');
+    sky.addColorStop(1, '#a3d0cf');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, horizon);
+    drawTerrain(width, height, horizon, elapsed);
+    const centerX = width / 2;
+    const centerY = height * .67;
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(run.heading * Math.PI / 1800);
+    ctx.fillStyle = 'rgba(9, 25, 32, .78)';
+    ctx.beginPath();
+    ctx.moveTo(-width * .34, 20); ctx.lineTo(-width * .08, -8); ctx.lineTo(-20, -13);
+    ctx.lineTo(0, -42); ctx.lineTo(20, -13); ctx.lineTo(width * .08, -8); ctx.lineTo(width * .34, 20);
+    ctx.lineTo(width * .07, 15); ctx.lineTo(0, 30); ctx.lineTo(-width * .07, 15); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#314b50';
+    ctx.beginPath(); ctx.ellipse(-width * .18, 19, 25, 11, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(width * .18, 19, 25, 11, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#72e4ee';
+    ctx.beginPath(); ctx.ellipse(0, -22, 12, 27, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffdc65';
+    ctx.fillRect(-width * .27, 18, 12, 3); ctx.fillRect(width * .27 - 12, 18, 12, 3);
+    ctx.restore();
+    ctx.fillStyle = 'rgba(8, 28, 37, .68)';
+    ctx.fillRect(18, 18, 170, 35);
+    ctx.fillStyle = '#e8f4dc';
+    ctx.font = '10px Consolas, monospace';
+    ctx.fillText('EXTERNAL CAMERA / ' + run.phase, 30, 40);
 }
 
 function drawTopDown(width, height, elapsed) {
