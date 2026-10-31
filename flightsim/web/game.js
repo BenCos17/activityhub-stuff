@@ -25,6 +25,7 @@ const mapPanel = document.getElementById('map-panel');
 const liveMap = document.getElementById('live-map');
 const mapStatus = document.getElementById('map-status');
 const imageryToggle = document.getElementById('imagery-toggle');
+const mapAttribution = document.getElementById('map-attribution');
 const selectedFlight = document.getElementById('selected-flight');
 const startPanel = document.getElementById('start-panel');
 const endPanel = document.getElementById('end-panel');
@@ -46,7 +47,7 @@ let liveTraffic = [];
 let selectedAircraft = null;
 let mapCenter = { lat: 38.84916, lon: -77.04138 };
 let mapZoom = 9;
-let mapLayer = 'street';
+let mapLayer = 'satellite';
 const terrainZoom = 12;
 const streetTileCache = new Map();
 let mapScene = null;
@@ -89,6 +90,9 @@ document.getElementById('map-close').addEventListener('click', () => {
 imageryToggle.addEventListener('click', () => {
     mapLayer = mapLayer === 'street' ? 'satellite' : 'street';
     imageryToggle.textContent = mapLayer === 'street' ? 'STREET' : 'SATELLITE';
+    mapAttribution.textContent = mapLayer === 'street'
+        ? '© OpenStreetMap contributors / 40 NM AIRSPACE'
+        : '© Esri, Maxar, Earthstar Geographics / 40 NM AIRSPACE';
     renderLiveMap();
 });
 document.getElementById('zoom-in').addEventListener('click', () => {
@@ -405,7 +409,7 @@ function drawExterior(width, height, elapsed) {
     const centerY = height * .67;
     ctx.save();
     ctx.translate(centerX, centerY);
-    ctx.rotate(run.heading * Math.PI / 1800);
+    ctx.rotate(run.heading * Math.PI / 180);
     ctx.fillStyle = 'rgba(9, 25, 32, .78)';
     ctx.beginPath();
     ctx.moveTo(-width * .34, 20); ctx.lineTo(-width * .08, -8); ctx.lineTo(-20, -13);
@@ -435,15 +439,17 @@ function projectAtZoom(latitude, longitude, zoom) {
     return { x, y };
 }
 
-function getStreetTile(column, row) {
+function getTerrainTile(column, row) {
     const maxTile = 2 ** terrainZoom;
     const tileX = ((column % maxTile) + maxTile) % maxTile;
     const tileY = Math.max(0, Math.min(maxTile - 1, row));
-    const key = `${terrainZoom}/${tileX}/${tileY}`;
+    const key = `${mapLayer}/${terrainZoom}/${tileX}/${tileY}`;
     if (streetTileCache.has(key)) return streetTileCache.get(key);
     const image = new Image();
     image.crossOrigin = 'anonymous';
-    image.src = `/.proxy/osm/${key}.png`;
+    image.src = mapLayer === 'street'
+        ? `/.proxy/osm/${terrainZoom}/${tileX}/${tileY}.png`
+        : `/.proxy/esri/ArcGIS/rest/services/World_Imagery/MapServer/tile/${terrainZoom}/${tileY}/${tileX}`;
     streetTileCache.set(key, image);
     return image;
 }
@@ -469,7 +475,7 @@ function drawStreetMapGround(width, height, horizon) {
     ctx.translate(-center.x, -center.y);
     for (let row = startRow; row <= endRow; row += 1) {
         for (let column = startColumn; column <= endColumn; column += 1) {
-            const image = getStreetTile(column, row);
+            const image = getTerrainTile(column, row);
             if (image.complete && image.naturalWidth > 0) {
                 ctx.drawImage(image, column * 256, row * 256, 256, 256);
             }

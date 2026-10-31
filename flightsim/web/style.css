@@ -607,13 +607,14 @@ button {
 .map-player {
     position: absolute;
     z-index: 4;
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 26px;
     border: 2px solid #082a34;
-    border-radius: 50%;
+    border-radius: 50% 50% 45% 45%;
     background: var(--cyan);
     box-shadow: 0 0 0 5px rgba(114, 228, 238, .35);
     transform: translate(-50%, -50%);
+    clip-path: polygon(50% 0, 100% 78%, 64% 68%, 50% 100%, 36% 68%, 0 78%);
 }
 
 .score-readout {
