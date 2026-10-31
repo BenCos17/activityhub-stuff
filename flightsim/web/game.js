@@ -24,8 +24,6 @@ const trafficDetail = document.getElementById('traffic-detail');
 const mapPanel = document.getElementById('map-panel');
 const liveMap = document.getElementById('live-map');
 const mapStatus = document.getElementById('map-status');
-const imageryToggle = document.getElementById('imagery-toggle');
-const mapAttribution = document.getElementById('map-attribution');
 const selectedFlight = document.getElementById('selected-flight');
 const startPanel = document.getElementById('start-panel');
 const endPanel = document.getElementById('end-panel');
@@ -46,8 +44,7 @@ let run = null;
 let liveTraffic = [];
 let selectedAircraft = null;
 let mapCenter = { lat: 38.84916, lon: -77.04138 };
-const mapZoom = 9;
-let mapLayer = 'satellite';
+let mapZoom = 9;
 let viewMode = 'cockpit';
 let localBest = Number(localStorage.getItem('flightsim-best') || 0);
 bestLabel.textContent = String(localBest).padStart(5, '0');
@@ -77,10 +74,12 @@ document.getElementById('map-toggle').addEventListener('click', () => {
     if (!mapPanel.classList.contains('hidden')) renderLiveMap();
 });
 document.getElementById('map-close').addEventListener('click', () => mapPanel.classList.add('hidden'));
-imageryToggle.addEventListener('click', () => {
-    mapLayer = mapLayer === 'satellite' ? 'street' : 'satellite';
-    imageryToggle.textContent = mapLayer === 'satellite' ? 'SATELLITE' : 'STREET MAP';
-    mapAttribution.textContent = mapLayer === 'satellite' ? '© ESRI WORLD IMAGERY / 40 NM AIRSPACE' : '© OPENSTREETMAP CONTRIBUTORS / 40 NM AIRSPACE';
+document.getElementById('zoom-in').addEventListener('click', () => {
+    mapZoom = Math.min(13, mapZoom + 1);
+    renderLiveMap();
+});
+document.getElementById('zoom-out').addEventListener('click', () => {
+    mapZoom = Math.max(5, mapZoom - 1);
     renderLiveMap();
 });
 
@@ -174,9 +173,8 @@ function renderLiveMap() {
             image.loading = 'lazy';
             const tileX = ((column % maxTile) + maxTile) % maxTile;
             const tileY = Math.max(0, Math.min(maxTile - 1, row));
-            image.src = mapLayer === 'satellite'
-                ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${mapZoom}/${tileY}/${tileX}`
-                : `https://tile.openstreetmap.org/${mapZoom}/${tileX}/${tileY}.png`;
+            image.src = `https://tile.openstreetmap.org/${mapZoom}/${tileX}/${tileY}.png`;
+            image.referrerPolicy = 'no-referrer-when-downgrade';
             image.style.left = `${column * tileSize - center.x + width / 2}px`;
             image.style.top = `${row * tileSize - center.y + height / 2}px`;
             liveMap.append(image);

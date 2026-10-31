@@ -509,14 +509,26 @@ button {
     line-height: 1;
 }
 
-.map-header #imagery-toggle {
+.map-controls {
     margin-left: auto;
-    margin-right: 10px;
-    padding: 4px 7px;
-    border: 1px solid rgba(185, 237, 120, .7);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.map-controls button {
+    display: grid;
+    width: 25px;
+    height: 25px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, .35);
+    background: rgba(255, 255, 255, .08);
+    font: 18px Consolas, monospace;
+}
+
+.map-controls button:hover {
+    border-color: var(--green);
     color: var(--green);
-    font: 8px Consolas, monospace;
-    letter-spacing: .5px;
 }
 
 .live-map {
