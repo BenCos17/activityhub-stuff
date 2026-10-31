@@ -336,7 +336,7 @@ function draw(width, height, elapsed) {
 }
 
 function drawCockpit(width, height, elapsed) {
-    const horizon = height * .42 - run.pitch * 3;
+    const horizon = height * .42 + run.pitch * 3;
     const sky = ctx.createLinearGradient(0, 0, 0, horizon);
     sky.addColorStop(0, '#173d52');
     sky.addColorStop(1, '#79b5bf');
@@ -402,7 +402,7 @@ function drawCockpitFrame(width, height) {
 }
 
 function drawExterior(width, height, elapsed) {
-    const horizon = height * .46 - run.pitch * 2;
+    const horizon = height * .46 + run.pitch * 2;
     const sky = ctx.createLinearGradient(0, 0, 0, horizon);
     sky.addColorStop(0, '#142f4b');
     sky.addColorStop(1, '#a3d0cf');
@@ -413,7 +413,6 @@ function drawExterior(width, height, elapsed) {
     const centerY = height * .67;
     ctx.save();
     ctx.translate(centerX, centerY);
-    ctx.rotate(run.heading * Math.PI / 180);
     ctx.fillStyle = 'rgba(9, 25, 32, .78)';
     ctx.beginPath();
     ctx.moveTo(-width * .34, 20); ctx.lineTo(-width * .08, -8); ctx.lineTo(-20, -13);
