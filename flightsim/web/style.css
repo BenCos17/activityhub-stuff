@@ -484,8 +484,11 @@ button {
 }
 
 .sim-window.map-view .map-panel {
-    inset: 0;
-    border: 0;
+    inset: 43% 7% 22%;
+    border-color: rgba(255, 255, 255, .8);
+    box-shadow: 0 16px 42px rgba(0, 20, 28, .62), 0 -12px 30px rgba(7, 29, 38, .28);
+    transform: perspective(1000px) rotateX(1.5deg);
+    transform-origin: center bottom;
 }
 
 .map-header,
@@ -807,6 +810,10 @@ kbd {
 
     .map-panel {
         inset: 16% 5% 24%;
+    }
+
+    .sim-window.map-view .map-panel {
+        inset: 43% 4% 25%;
     }
 
     .overlay h1 {
