@@ -39,8 +39,25 @@ let run = null;
 let animationId = 0;
 let lastFrame = 0;
 let mouseTurn = 0;
+let audioContext = null;
 let localBest = Number(localStorage.getItem('dungeon-best') || 0);
 bestLabel.textContent = String(localBest).padStart(5, '0');
+
+function playSound(frequency, duration = .12, type = 'sine', volume = .035, slide = 0) {
+    audioContext ??= new (window.AudioContext || window.webkitAudioContext)();
+    if (audioContext.state === 'suspended') audioContext.resume();
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    const now = audioContext.currentTime;
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, now);
+    oscillator.frequency.linearRampToValueAtTime(Math.max(30, frequency + slide), now + duration);
+    gain.gain.setValueAtTime(volume, now);
+    gain.gain.exponentialRampToValueAtTime(.001, now + duration);
+    oscillator.connect(gain).connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + duration);
+}
 
 addEventListener('keydown', (event) => { if (['w', 'a', 's', 'd', ' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); keys.add(event.key.toLowerCase()); } });
 addEventListener('keyup', (event) => keys.delete(event.key.toLowerCase()));
@@ -81,14 +98,15 @@ function levelSetup(level) {
 function startGame() {
     startPanel.classList.add('hidden'); endPanel.classList.add('hidden');
     const level = levelSetup(1);
-    run = { x: 1.7, y: 1.7, angle: 0, health: 100, shards: 0, kills: 0, weaponDamage: 1, weaponName: 'RUSTED BLADE', level: 1, started: performance.now(), score: 0, enemies: level.enemies, items: level.items, gate: level.gate, gateOpenProgress: 0, lastStrike: 0, hurtAt: 0 };
+    run = { x: 1.7, y: 1.7, angle: 0, health: 100, shards: 0, kills: 0, weaponDamage: 1, weaponName: 'RUSTED BLADE', level: 1, started: performance.now(), score: 0, enemies: level.enemies, items: level.items, gate: level.gate, gateOpenProgress: 0, gateSoundPlayed: false, lastStrike: 0, hurtAt: 0 };
     weaponLabel.textContent = run.weaponName;
-    statusLabel.textContent = 'The gate is sealed. Find the three relic shards.'; objectiveLabel.textContent = 'FIND THE RELIC'; depthLabel.textContent = '01'; bossHud.classList.add('hidden'); lastFrame = performance.now(); cancelAnimationFrame(animationId); animationId = requestAnimationFrame(frame);
+    playSound(180, .28, 'triangle', .04, 90); statusLabel.textContent = 'The gate is sealed. Find the three relic shards.'; objectiveLabel.textContent = 'FIND THE RELIC'; depthLabel.textContent = '01'; bossHud.classList.add('hidden'); lastFrame = performance.now(); cancelAnimationFrame(animationId); animationId = requestAnimationFrame(frame);
 }
 function advanceLevel() {
     run.level += 1;
     const level = levelSetup(run.level);
-    run.x = run.level > 1 ? 8.5 : 1.7; run.y = run.level > 1 ? 10.5 : 1.7; run.angle = run.level > 1 ? -Math.PI / 2 : 0; run.health = Math.min(100, run.health + 25); run.enemies = level.enemies; run.items = level.items; run.gate = level.gate; run.gateOpenProgress = 0; run.lastStrike = 0; run.hurtAt = 0;
+    run.x = run.level > 1 ? 8.5 : 1.7; run.y = run.level > 1 ? 10.5 : 1.7; run.angle = run.level > 1 ? -Math.PI / 2 : 0; run.health = Math.min(100, run.health + 25); run.enemies = level.enemies; run.items = level.items; run.gate = level.gate; run.gateOpenProgress = 0; run.gateSoundPlayed = false; run.lastStrike = 0; run.hurtAt = 0;
+    playSound(260 + run.level * 18, .3, 'triangle', .04, 100);
     depthLabel.textContent = String(run.level).padStart(2, '0');
     objectiveLabel.textContent = `DEFEAT THE ${level.enemies.find((enemy) => enemy.boss).name}`;
     statusLabel.textContent = `Level ${run.level}: the ${level.enemies.find((enemy) => enemy.boss).name} waits below.`;
@@ -101,13 +119,14 @@ function move(delta) {
 }
 function strike() {
     if (!run || performance.now() - run.lastStrike < 420) return; run.lastStrike = performance.now();
+    playSound(120, .08, 'sawtooth', .025, 70);
     const target = run.enemies.filter((enemy) => enemy.alive && distance(run, enemy) < 2.25).sort((a, b) => distance(run, a) - distance(run, b))[0];
     if (!target) { statusLabel.textContent = 'Your blade cuts only dust.'; return; }
     const relative = Math.atan2(target.y - run.y, target.x - run.x); const angle = Math.atan2(Math.sin(relative - run.angle), Math.cos(relative - run.angle));
     if (Math.abs(angle) < .42) { target.health -= run.weaponDamage + (target.boss ? 1 : 0); target.alive = target.health > 0; if (!target.alive) { run.kills += 1; run.score += target.boss ? 3000 : 500; if (Math.random() < (target.boss ? .65 : .12)) { const weapon = target.boss ? { name: 'WARDEN\'S MAUL', damage: 3 } : { name: 'RUNE BLADE', damage: 2 }; run.items.push({ x: target.x, y: target.y, type: 'weapon', taken: false, ...weapon }); target.dropName = weapon.name; } } statusLabel.textContent = target.health ? (target.boss ? 'The boss staggers. Keep firing.' : 'A hit. The guardian recoils.') : target.dropName ? `${target.name || 'Guardian'} dropped a ${target.dropName}.` : (target.boss ? `${target.name} falls. Find the gate.` : 'The guardian falls into the dark.'); }
 }
 function updateEnemies(delta, now) {
-    run.enemies.forEach((enemy) => { if (!enemy.alive) return; const gap = distance(run, enemy); if (gap < 5 && gap > .7) { const chaseSpeed = enemy.boss ? .25 : .42; const dx = (run.x - enemy.x) / gap * delta * chaseSpeed; const dy = (run.y - enemy.y) / gap * delta * chaseSpeed; if (!isWall(enemy.x + dx, enemy.y)) enemy.x += dx; if (!isWall(enemy.x, enemy.y + dy)) enemy.y += dy; } if (gap < .82 && now - run.hurtAt > 800) { run.health -= enemy.boss ? 20 : 12; run.hurtAt = now; statusLabel.textContent = enemy.boss ? `${enemy.name} crushes you.` : 'The guardian strikes you.'; } });
+    run.enemies.forEach((enemy) => { if (!enemy.alive) return; const gap = distance(run, enemy); if (gap < 5 && gap > .7) { const chaseSpeed = enemy.boss ? .25 : .42; const dx = (run.x - enemy.x) / gap * delta * chaseSpeed; const dy = (run.y - enemy.y) / gap * delta * chaseSpeed; if (!isWall(enemy.x + dx, enemy.y)) enemy.x += dx; if (!isWall(enemy.x, enemy.y + dy)) enemy.y += dy; } if (gap < .82 && now - run.hurtAt > 800) { run.health -= enemy.boss ? 20 : 12; run.hurtAt = now; playSound(70, .16, 'square', .035, -25); statusLabel.textContent = enemy.boss ? `${enemy.name} crushes you.` : 'The guardian strikes you.'; } });
 }
 function checkGoals(now) {
     run.items.forEach((item) => {
@@ -117,6 +136,7 @@ function checkGoals(now) {
             run.shards += 1;
             run.health = Math.min(100, run.health + 15);
             run.score += 1000;
+            playSound(620, .16, 'sine', .04, 260);
             statusLabel.textContent = `Relic shard recovered. Vitality restored by 15. ${3 - run.shards} remain.`;
         } else if (item.type === 'weapon') {
             if (item.damage > run.weaponDamage) {
@@ -124,6 +144,7 @@ function checkGoals(now) {
                 run.weaponName = item.name;
                 weaponLabel.textContent = run.weaponName;
                 run.score += 750;
+                playSound(420, .3, 'triangle', .045, 360);
                 statusLabel.textContent = `${item.name} equipped. Strike damage increased.`;
             } else {
                 statusLabel.textContent = `${item.name} found, but your weapon is stronger.`;
@@ -131,6 +152,7 @@ function checkGoals(now) {
         } else {
             run.health = Math.min(100, run.health + 30);
             run.score += 250;
+            playSound(520, .2, 'sine', .04, 180);
             statusLabel.textContent = 'Health potion consumed. Vitality restored by 30.';
         }
     });
@@ -141,7 +163,7 @@ function checkGoals(now) {
     if (run.health <= 0) finish(false, 'The dark takes you.');
 }
 function finish(escaped, message = '') {
-    if (!run) return; cancelAnimationFrame(animationId); const elapsed = (performance.now() - run.started) / 1000; run.score += escaped ? Math.max(100, Math.floor(run.level * 1500 - elapsed * 20 + run.health * 12)) : run.health * 2; const score = Math.max(0, run.score); localBest = Math.max(localBest, score); localStorage.setItem('dungeon-best', localBest); finalScore.textContent = String(score).padStart(5, '0'); bestLabel.textContent = String(localBest).padStart(5, '0'); resultKicker.textContent = escaped ? 'THE KEEP REMEMBERS' : 'THE DESCENT ENDS'; resultTitle.textContent = escaped ? 'ESCAPED.' : 'LOST.'; resultCopy.textContent = message || `You survived ${run.level} levels in ${elapsed.toFixed(1)} seconds.`; endPanel.classList.remove('hidden'); bossHud.classList.add('hidden'); submitScore(score); run = null;
+    if (!run) return; cancelAnimationFrame(animationId); const elapsed = (performance.now() - run.started) / 1000; run.score += escaped ? Math.max(100, Math.floor(run.level * 1500 - elapsed * 20 + run.health * 12)) : run.health * 2; playSound(escaped ? 420 : 80, .4, escaped ? 'triangle' : 'sawtooth', .05, escaped ? 300 : -45); const score = Math.max(0, run.score); localBest = Math.max(localBest, score); localStorage.setItem('dungeon-best', localBest); finalScore.textContent = String(score).padStart(5, '0'); bestLabel.textContent = String(localBest).padStart(5, '0'); resultKicker.textContent = escaped ? 'THE KEEP REMEMBERS' : 'THE DESCENT ENDS'; resultTitle.textContent = escaped ? 'ESCAPED.' : 'LOST.'; resultCopy.textContent = message || `You survived ${run.level} levels in ${elapsed.toFixed(1)} seconds.`; endPanel.classList.remove('hidden'); bossHud.classList.add('hidden'); submitScore(score); run = null;
 }
 async function submitScore(score) { if (!hub || hub.offline) return; try { const result = await hub.api('submit_score', { score }); if (result?.best_score) bestLabel.textContent = String(result.best_score).padStart(5, '0'); } catch (error) { statusLabel.textContent = `Score sync unavailable: ${error.message}`; } }
 function frame(now) { if (!run) return; const delta = Math.min((now - lastFrame) / 1000, .05); lastFrame = now; move(delta); updateEnemies(delta, now); checkGoals(now); if (!run) return; updateHud(now); draw(); animationId = requestAnimationFrame(frame); }
@@ -149,7 +171,7 @@ function updateHud(now) { const elapsed = (now - run.started) / 1000; timerLabel
 function cast(angle) { let distanceToWall = 0; const step = .025; while (distanceToWall < 20) { distanceToWall += step; if (isWall(run.x + Math.cos(angle) * distanceToWall, run.y + Math.sin(angle) * distanceToWall)) break; } return distanceToWall; }
 function draw() {
     const width = canvas.clientWidth; const height = canvas.clientHeight; const horizon = height * .48; ctx.clearRect(0, 0, width, height); const sky = ctx.createLinearGradient(0, 0, 0, horizon); sky.addColorStop(0, '#101a2b'); sky.addColorStop(1, '#49303f'); ctx.fillStyle = sky; ctx.fillRect(0, 0, width, horizon); const floor = ctx.createLinearGradient(0, horizon, 0, height); floor.addColorStop(0, '#293b43'); floor.addColorStop(1, '#0a121b'); ctx.fillStyle = floor; ctx.fillRect(0, horizon, width, height - horizon); drawCellarFloor(width, height, horizon); const fov = Math.PI / 3; const columnWidth = Math.max(2, width / 360); rays.length = 0;
-    for (let x = 0; x < width; x += columnWidth) { const rayAngle = run.angle - fov / 2 + (x / width) * fov; const raw = cast(rayAngle); const corrected = raw * Math.cos(rayAngle - run.angle); const wallHitX = Math.floor(run.x + Math.cos(rayAngle) * raw); const wallHitY = Math.floor(run.y + Math.sin(rayAngle) * raw); const wallHeight = Math.min(height * 1.5, height * .78 / Math.max(.08, corrected)); const light = Math.max(.25, 1 - corrected / 13); const tone = Math.abs((wallHitX * 7 + wallHitY * 11) % 4); const stone = [[105, 76, 65], [57, 78, 89], [87, 67, 91], [72, 83, 78]][tone]; const wallColor = `rgb(${Math.round(stone[0] * light + 8)}, ${Math.round(stone[1] * light + 8)}, ${Math.round(stone[2] * light + 9)})`; ctx.fillStyle = wallColor; ctx.fillRect(x, horizon - wallHeight / 2, columnWidth + 1, wallHeight); rays.push({ x, distance: corrected }); }
+    for (let x = 0; x < width; x += columnWidth) { const rayAngle = run.angle - fov / 2 + (x / width) * fov; const raw = cast(rayAngle); const corrected = raw * Math.cos(rayAngle - run.angle); const wallHitX = Math.floor(run.x + Math.cos(rayAngle) * raw); const wallHitY = Math.floor(run.y + Math.sin(rayAngle) * raw); const wallHeight = Math.min(height * 1.5, height * .78 / Math.max(.08, corrected)); const light = Math.max(.3, 1 - corrected / 14); const variation = ((wallHitX * 13 + wallHitY * 5) % 7) - 3; const stone = [78 + variation, 86 + variation, 82 + variation]; const wallColor = `rgb(${Math.round(stone[0] * light + 6)}, ${Math.round(stone[1] * light + 7)}, ${Math.round(stone[2] * light + 7)})`; ctx.fillStyle = wallColor; ctx.fillRect(x, horizon - wallHeight / 2, columnWidth + 1, wallHeight); rays.push({ x, distance: corrected }); }
     const sprites = [...run.items.filter((item) => !item.taken), ...run.enemies.filter((enemy) => enemy.alive).map((enemy) => ({ ...enemy, type: 'enemy' })), { ...run.gate, type: 'gate' }].map((sprite) => { const dx = sprite.x - run.x; const dy = sprite.y - run.y; const relative = Math.atan2(Math.sin(Math.atan2(dy, dx) - run.angle), Math.cos(Math.atan2(dy, dx) - run.angle)); return { sprite, relative, distance: Math.hypot(dx, dy), depth: Math.cos(relative) * Math.hypot(dx, dy) }; }).filter((item) => Math.abs(item.relative) < fov * .65 && item.depth > .15).sort((a, b) => b.depth - a.depth);
     sprites.forEach(({ sprite, relative, depth }) => { const screenX = width / 2 + Math.tan(relative) / Math.tan(fov / 2) * width / 2; const size = sprite.type === 'gate' ? Math.min(height * 1.5, height * 1.1 / depth) : Math.min(height * 1.1, height * .7 / depth); const centerY = sprite.type === 'gate' ? horizon + size * .35 : horizon + Math.sin((performance.now() / 400) + sprite.x) * 3; const visibleWall = rays[Math.min(rays.length - 1, Math.max(0, Math.floor(screenX / width * rays.length)))]; if (!visibleWall || (sprite.type !== 'gate' && depth > visibleWall.distance + .2)) return; if (sprite.type === 'enemy') { if (sprite.boss) drawBoss(screenX, centerY, size); else drawEnemy(screenX, centerY, size); } else if (sprite.type === 'shard') drawShard(screenX, centerY, size); else if (sprite.type === 'potion') drawPotion(screenX, centerY, size); else if (sprite.type === 'weapon') drawWeapon(screenX, centerY, size); else drawGate(screenX, centerY, size, sprite); });
 }
