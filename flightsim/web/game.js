@@ -238,7 +238,7 @@ function renderLiveMap() {
 }
 
 function updateMapOrientation() {
-    if (mapScene) mapScene.style.transform = `rotate(${run ? -run.heading : 0}deg)`;
+    if (mapScene) mapScene.style.transform = 'none';
 }
 
 function selectAircraft(aircraft) {
