@@ -216,7 +216,7 @@ function renderLiveMap() {
         playerMarker.title = 'Your aircraft';
         playerMarker.style.left = `${playerPoint.x - center.x + width / 2}px`;
         playerMarker.style.top = `${playerPoint.y - center.y + height / 2}px`;
-        playerMarker.style.transform = `translate(-50%, -50%) rotate(${run.heading}deg)`;
+        playerMarker.style.transform = `translate(-50%, -50%) rotate(${run.heading + 180}deg)`;
         mapScene.append(playerMarker);
     }
     liveTraffic.forEach((aircraft, index) => {
@@ -238,7 +238,11 @@ function renderLiveMap() {
 }
 
 function updateMapOrientation() {
-    if (mapScene) mapScene.style.transform = 'none';
+    if (mapScene) {
+        mapScene.style.transform = run
+            ? `rotate(${-run.heading}deg)`
+            : 'none';
+    }
 }
 
 function selectAircraft(aircraft) {
