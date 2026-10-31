@@ -257,6 +257,15 @@ canvas {
     color: var(--gold);
 }
 
+.weapon strong {
+    max-width: 130px;
+    overflow: hidden;
+    color: #8ed6d3;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .score {
     margin-left: auto;
     text-align: right;
