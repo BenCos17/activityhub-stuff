@@ -45,6 +45,8 @@ let liveTraffic = [];
 let selectedAircraft = null;
 let mapCenter = { lat: 38.84916, lon: -77.04138 };
 let mapZoom = 9;
+const terrainZoom = 12;
+const streetTileCache = new Map();
 let viewMode = 'cockpit';
 let localBest = Number(localStorage.getItem('flightsim-best') || 0);
 bestLabel.textContent = String(localBest).padStart(5, '0');
@@ -70,10 +72,17 @@ hudToggle.addEventListener('click', () => {
     hudToggle.classList.toggle('active');
 });
 document.getElementById('map-toggle').addEventListener('click', () => {
-    mapPanel.classList.toggle('hidden');
-    if (!mapPanel.classList.contains('hidden')) renderLiveMap();
+    const isOpening = mapPanel.classList.contains('hidden');
+    mapPanel.classList.toggle('hidden', !isOpening);
+    simWindow.classList.toggle('map-view', isOpening);
+    document.getElementById('map-toggle').classList.toggle('active', isOpening);
+    if (isOpening) renderLiveMap();
 });
-document.getElementById('map-close').addEventListener('click', () => mapPanel.classList.add('hidden'));
+document.getElementById('map-close').addEventListener('click', () => {
+    mapPanel.classList.add('hidden');
+    simWindow.classList.remove('map-view');
+    document.getElementById('map-toggle').classList.remove('active');
+});
 document.getElementById('zoom-in').addEventListener('click', () => {
     mapZoom = Math.min(13, mapZoom + 1);
     renderLiveMap();
@@ -397,6 +406,59 @@ function drawExterior(width, height, elapsed) {
     ctx.fillText('EXTERNAL CAMERA / ' + run.phase, 30, 40);
 }
 
+function projectAtZoom(latitude, longitude, zoom) {
+    const scale = 256 * 2 ** zoom;
+    const x = (longitude + 180) / 360 * scale;
+    const sine = Math.sin(latitude * Math.PI / 180);
+    const y = (0.5 - Math.log((1 + sine) / (1 - sine)) / (4 * Math.PI)) * scale;
+    return { x, y };
+}
+
+function getStreetTile(column, row) {
+    const maxTile = 2 ** terrainZoom;
+    const tileX = ((column % maxTile) + maxTile) % maxTile;
+    const tileY = Math.max(0, Math.min(maxTile - 1, row));
+    const key = `${terrainZoom}/${tileX}/${tileY}`;
+    if (streetTileCache.has(key)) return streetTileCache.get(key);
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.src = `https://tile.openstreetmap.org/${key}.png`;
+    streetTileCache.set(key, image);
+    return image;
+}
+
+function drawStreetMapGround(width, height, horizon) {
+    const fallback = ctx.createLinearGradient(0, horizon, 0, height);
+    fallback.addColorStop(0, '#6d9590');
+    fallback.addColorStop(1, '#1d382f');
+    ctx.fillStyle = fallback;
+    ctx.fillRect(0, horizon, width, height - horizon);
+
+    const center = projectAtZoom(run.lat, run.lon, terrainZoom);
+    const startColumn = Math.floor((center.x - width) / 256);
+    const endColumn = Math.ceil((center.x + width) / 256);
+    const startRow = Math.floor((center.y - height) / 256);
+    const endRow = Math.ceil((center.y + height) / 256);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, horizon, width, height - horizon);
+    ctx.clip();
+    ctx.translate(width / 2, horizon + 16);
+    ctx.rotate(-run.heading * Math.PI / 180);
+    ctx.translate(-center.x, -center.y);
+    for (let row = startRow; row <= endRow; row += 1) {
+        for (let column = startColumn; column <= endColumn; column += 1) {
+            const image = getStreetTile(column, row);
+            if (image.complete && image.naturalWidth > 0) {
+                ctx.drawImage(image, column * 256, row * 256, 256, 256);
+            }
+        }
+    }
+    ctx.restore();
+    ctx.fillStyle = 'rgba(25, 67, 63, .28)';
+    ctx.fillRect(0, horizon, width, height - horizon);
+}
+
 function drawTopDown(width, height, elapsed) {
     const centerX = width / 2;
     const centerY = height / 2;
@@ -467,39 +529,15 @@ function drawTopDown(width, height, elapsed) {
 }
 
 function drawTerrain(width, height, horizon, elapsed) {
-    const ground = ctx.createLinearGradient(0, horizon, 0, height);
-    ground.addColorStop(0, '#6d9590');
-    ground.addColorStop(.2, '#527d69');
-    ground.addColorStop(1, '#1d382f');
-    ctx.fillStyle = ground;
-    ctx.fillRect(0, horizon, width, height - horizon);
+    drawStreetMapGround(width, height, horizon);
 
     ctx.save();
     ctx.beginPath();
     ctx.rect(0, horizon, width, height - horizon);
     ctx.clip();
 
-    const drift = (elapsed * 7) % 150;
-    const fields = [
-        ['#507c5c', -180, 72, 310, 120, -0.08], ['#668a56', 150, 70, 270, 145, 0.12],
-        ['#8e955d', 420, 66, 260, 125, -0.04], ['#3e725f', -280, 205, 410, 170, 0.08],
-        ['#8a8752', 210, 220, 330, 190, -0.12], ['#4d7956', 610, 185, 340, 210, 0.05],
-        ['#6f8750', -120, 385, 360, 230, -0.1], ['#a18f57', 260, 405, 420, 250, 0.09],
-        ['#3e684e', 650, 390, 410, 260, -0.06]
-    ];
-    fields.forEach(([color, x, y, fieldWidth, fieldHeight, angle]) => {
-        ctx.save();
-        ctx.translate(x + width / 2 - 440, horizon + y - drift * .16);
-        ctx.rotate(angle);
-        ctx.fillStyle = color;
-        ctx.fillRect(-fieldWidth / 2, -fieldHeight / 2, fieldWidth, fieldHeight);
-        ctx.strokeStyle = 'rgba(230, 215, 145, .14)';
-        ctx.lineWidth = 2;
-        for (let row = -fieldHeight / 2; row < fieldHeight / 2; row += 12) {
-            ctx.beginPath(); ctx.moveTo(-fieldWidth / 2, row); ctx.lineTo(fieldWidth / 2, row); ctx.stroke();
-        }
-        ctx.restore();
-    });
+    ctx.fillStyle = 'rgba(255, 255, 255, .08)';
+    ctx.fillRect(0, horizon, width, 18);
 
     ctx.strokeStyle = 'rgba(232, 230, 192, .62)';
     ctx.lineWidth = 3;
