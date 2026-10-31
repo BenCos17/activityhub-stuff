@@ -50,13 +50,27 @@ resize();
 function resize() { const ratio = Math.min(devicePixelRatio || 1, 2); canvas.width = canvas.clientWidth * ratio; canvas.height = canvas.clientHeight * ratio; ctx.setTransform(ratio, 0, 0, ratio, 0, 0); }
 function isWall(x, y) { return map[Math.floor(y)]?.[Math.floor(x)] === '#'; }
 function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+function randomPotions(level, occupied, gate) {
+    const available = [];
+    for (let y = 1; y < map.length - 1; y += 1) {
+        for (let x = 1; x < map[y].length - 1; x += 1) {
+            const position = { x: x + .5, y: y + .5 };
+            if (!isWall(position.x, position.y) && distance(position, { x: 1.7, y: 1.7 }) > 2.2 && distance(position, gate) > 1.2 && !occupied.some((item) => distance(position, item) < 1.1)) available.push(position);
+        }
+    }
+    const count = Math.min(4, 1 + Math.floor(level / 2));
+    for (let index = available.length - 1; index > 0; index -= 1) { const swapIndex = Math.floor(Math.random() * (index + 1));[available[index], available[swapIndex]] = [available[swapIndex], available[index]]; }
+    return available.slice(0, count).map((position) => ({ ...position, type: 'potion', taken: false }));
+}
 function levelSetup(level) {
     const enemies = level === 1
         ? [{ x: 5.3, y: 3.5, health: 2, maxHealth: 2, alive: true }, { x: 11.5, y: 7.3, health: 2, maxHealth: 2, alive: true }, { x: 7.5, y: 10.8, health: 3, maxHealth: 3, alive: true }]
         : [{ x: 5.3, y: 3.5, health: 2, maxHealth: 2, alive: true }, { x: 11.5, y: 7.3, health: 3, maxHealth: 3, alive: true }, { x: 13.5, y: 9.5, health: 8 + level * 2, maxHealth: 8 + level * 2, alive: true, boss: true, name: level % 2 ? 'KEEP LORD' : 'IRON WARDEN' }];
     const extraPositions = [{ x: 3.5, y: 1.7 }, { x: 7.5, y: 7.5 }, { x: 13.5, y: 7.5 }, { x: 4.5, y: 11.5 }, { x: 12.5, y: 11.5 }];
     extraPositions.slice(0, Math.min(5, Math.floor((level - 1) / 2))).forEach((position) => enemies.push({ ...position, health: 2 + Math.floor(level / 3), maxHealth: 2 + Math.floor(level / 3), alive: true }));
-    return { enemies, items: level === 1 ? [{ x: 13.4, y: 1.7, taken: false }, { x: 2.5, y: 9.8, taken: false }, { x: 10.5, y: 5.5, taken: false }] : [], gate: { x: 14.3, y: 11.5 } };
+    const gate = { x: 14.3, y: 11.5 };
+    const shards = level === 1 ? [{ x: 13.4, y: 1.7, type: 'shard', taken: false }, { x: 2.5, y: 9.8, type: 'shard', taken: false }, { x: 10.5, y: 5.5, type: 'shard', taken: false }] : [];
+    return { enemies, items: [...shards, ...randomPotions(level, [...shards, ...enemies], gate)], gate };
 }
 function startGame() {
     startPanel.classList.add('hidden'); endPanel.classList.add('hidden');
@@ -89,7 +103,20 @@ function updateEnemies(delta, now) {
     run.enemies.forEach((enemy) => { if (!enemy.alive) return; const gap = distance(run, enemy); if (gap < 5 && gap > .7) { const chaseSpeed = enemy.boss ? .25 : .42; const dx = (run.x - enemy.x) / gap * delta * chaseSpeed; const dy = (run.y - enemy.y) / gap * delta * chaseSpeed; if (!isWall(enemy.x + dx, enemy.y)) enemy.x += dx; if (!isWall(enemy.x, enemy.y + dy)) enemy.y += dy; } if (gap < .82 && now - run.hurtAt > 800) { run.health -= enemy.boss ? 20 : 12; run.hurtAt = now; statusLabel.textContent = enemy.boss ? `${enemy.name} crushes you.` : 'The guardian strikes you.'; } });
 }
 function checkGoals(now) {
-    run.items.forEach((item) => { if (!item.taken && distance(run, item) < .65) { item.taken = true; run.shards += 1; run.score += 1000; statusLabel.textContent = `Relic shard recovered. ${3 - run.shards} remain.`; } });
+    run.items.forEach((item) => {
+        if (item.taken || distance(run, item) >= .65) return;
+        item.taken = true;
+        if (item.type === 'shard') {
+            run.shards += 1;
+            run.health = Math.min(100, run.health + 15);
+            run.score += 1000;
+            statusLabel.textContent = `Relic shard recovered. Vitality restored by 15. ${3 - run.shards} remain.`;
+        } else {
+            run.health = Math.min(100, run.health + 30);
+            run.score += 250;
+            statusLabel.textContent = 'Health potion consumed. Vitality restored by 30.';
+        }
+    });
     const bossAlive = run.enemies.some((enemy) => enemy.boss && enemy.alive);
     if (run.level === 1 && run.shards === 3) { objectiveLabel.textContent = 'REACH THE IRON GATE'; statusLabel.textContent = 'The gate can hear the relic. Find your way out.'; }
     if (run.level > 1 && !bossAlive && distance(run, run.gate) >= .8) { objectiveLabel.textContent = 'REACH THE IRON GATE'; statusLabel.textContent = 'The boss is dead. Find your way out.'; }
@@ -106,10 +133,11 @@ function cast(angle) { let distanceToWall = 0; const step = .025; while (distanc
 function draw() {
     const width = canvas.clientWidth; const height = canvas.clientHeight; const horizon = height * .48; ctx.clearRect(0, 0, width, height); const sky = ctx.createLinearGradient(0, 0, 0, horizon); sky.addColorStop(0, '#111525'); sky.addColorStop(1, '#382b2d'); ctx.fillStyle = sky; ctx.fillRect(0, 0, width, horizon); const floor = ctx.createLinearGradient(0, horizon, 0, height); floor.addColorStop(0, '#271d20'); floor.addColorStop(1, '#090a0d'); ctx.fillStyle = floor; ctx.fillRect(0, horizon, width, height - horizon); const fov = Math.PI / 3; const columnWidth = Math.max(2, width / 360); rays.length = 0;
     for (let x = 0; x < width; x += columnWidth) { const rayAngle = run.angle - fov / 2 + (x / width) * fov; const raw = cast(rayAngle); const corrected = raw * Math.cos(rayAngle - run.angle); const wallHeight = Math.min(height * 1.5, height * .78 / Math.max(.08, corrected)); const shade = Math.max(24, 132 - corrected * 10); ctx.fillStyle = `rgb(${shade + 17}, ${shade + 10}, ${shade})`; ctx.fillRect(x, horizon - wallHeight / 2, columnWidth + 1, wallHeight); rays.push({ x, distance: corrected }); }
-    const sprites = [...run.items.filter((item) => !item.taken).map((item) => ({ ...item, type: 'shard' })), ...run.enemies.filter((enemy) => enemy.alive).map((enemy) => ({ ...enemy, type: 'enemy' })), { ...run.gate, type: 'gate' }].map((sprite) => { const dx = sprite.x - run.x; const dy = sprite.y - run.y; const relative = Math.atan2(Math.sin(Math.atan2(dy, dx) - run.angle), Math.cos(Math.atan2(dy, dx) - run.angle)); return { sprite, relative, distance: Math.hypot(dx, dy), depth: Math.cos(relative) * Math.hypot(dx, dy) }; }).filter((item) => Math.abs(item.relative) < fov * .65 && item.depth > .15).sort((a, b) => b.depth - a.depth);
-    sprites.forEach(({ sprite, relative, depth }) => { const screenX = width / 2 + Math.tan(relative) / Math.tan(fov / 2) * width / 2; const size = Math.min(height * 1.1, height * .7 / depth); const centerY = horizon + Math.sin((performance.now() / 400) + sprite.x) * 3; const visibleWall = rays[Math.min(rays.length - 1, Math.max(0, Math.floor(screenX / width * rays.length)))]; if (!visibleWall || depth > visibleWall.distance + .2) return; if (sprite.type === 'enemy') { if (sprite.boss) drawBoss(screenX, centerY, size); else drawEnemy(screenX, centerY, size); } else if (sprite.type === 'shard') drawShard(screenX, centerY, size); else drawGate(screenX, centerY, size); });
+    const sprites = [...run.items.filter((item) => !item.taken), ...run.enemies.filter((enemy) => enemy.alive).map((enemy) => ({ ...enemy, type: 'enemy' })), { ...run.gate, type: 'gate' }].map((sprite) => { const dx = sprite.x - run.x; const dy = sprite.y - run.y; const relative = Math.atan2(Math.sin(Math.atan2(dy, dx) - run.angle), Math.cos(Math.atan2(dy, dx) - run.angle)); return { sprite, relative, distance: Math.hypot(dx, dy), depth: Math.cos(relative) * Math.hypot(dx, dy) }; }).filter((item) => Math.abs(item.relative) < fov * .65 && item.depth > .15).sort((a, b) => b.depth - a.depth);
+    sprites.forEach(({ sprite, relative, depth }) => { const screenX = width / 2 + Math.tan(relative) / Math.tan(fov / 2) * width / 2; const size = Math.min(height * 1.1, height * .7 / depth); const centerY = horizon + Math.sin((performance.now() / 400) + sprite.x) * 3; const visibleWall = rays[Math.min(rays.length - 1, Math.max(0, Math.floor(screenX / width * rays.length)))]; if (!visibleWall || depth > visibleWall.distance + .2) return; if (sprite.type === 'enemy') { if (sprite.boss) drawBoss(screenX, centerY, size); else drawEnemy(screenX, centerY, size); } else if (sprite.type === 'shard') drawShard(screenX, centerY, size); else if (sprite.type === 'potion') drawPotion(screenX, centerY, size); else drawGate(screenX, centerY, size); });
 }
 function drawEnemy(x, y, size) { ctx.save(); ctx.translate(x, y); ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(0, size * .38, size * .25, size * .08, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#211d2b'; ctx.beginPath(); ctx.arc(0, -size * .14, size * .18, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#8f3034'; ctx.fillRect(-size * .14, -size * .2, size * .07, size * .04); ctx.fillRect(size * .07, -size * .2, size * .07, size * .04); ctx.fillStyle = '#4d3441'; ctx.beginPath(); ctx.moveTo(-size * .18, size * .3); ctx.lineTo(-size * .1, -size * .03); ctx.lineTo(size * .1, -size * .03); ctx.lineTo(size * .18, size * .3); ctx.closePath(); ctx.fill(); ctx.restore(); }
 function drawBoss(x, y, size) { ctx.save(); ctx.translate(x, y); ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.beginPath(); ctx.ellipse(0, size * .42, size * .38, size * .1, 0, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 18; ctx.shadowColor = '#e76742'; ctx.fillStyle = '#3a1720'; ctx.beginPath(); ctx.arc(0, -size * .18, size * .27, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#e76742'; ctx.fillRect(-size * .18, -size * .25, size * .1, size * .06); ctx.fillRect(size * .08, -size * .25, size * .1, size * .06); ctx.shadowBlur = 0; ctx.fillStyle = '#6e2730'; ctx.beginPath(); ctx.moveTo(-size * .3, size * .36); ctx.lineTo(-size * .2, -size * .03); ctx.lineTo(size * .2, -size * .03); ctx.lineTo(size * .3, size * .36); ctx.closePath(); ctx.fill(); ctx.restore(); }
 function drawShard(x, y, size) { ctx.save(); ctx.translate(x, y - size * .1); ctx.rotate(performance.now() / 800); ctx.shadowBlur = 22; ctx.shadowColor = '#e5b95c'; ctx.fillStyle = '#e5b95c'; ctx.beginPath(); ctx.moveTo(0, -size * .3); ctx.lineTo(size * .1, 0); ctx.lineTo(0, size * .3); ctx.lineTo(-size * .1, 0); ctx.closePath(); ctx.fill(); ctx.restore(); }
+function drawPotion(x, y, size) { ctx.save(); ctx.translate(x, y); ctx.shadowBlur = 16; ctx.shadowColor = '#64d8cf'; ctx.fillStyle = '#64d8cf'; ctx.beginPath(); ctx.arc(0, size * .08, size * .13, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#d7ad58'; ctx.fillRect(-size * .07, -size * .12, size * .14, size * .08); ctx.restore(); }
 function drawGate(x, y, size) { ctx.save(); ctx.translate(x, y); ctx.fillStyle = '#715b43'; ctx.fillRect(-size * .3, -size * .45, size * .6, size * .8); ctx.strokeStyle = '#c49b58'; ctx.lineWidth = Math.max(2, size * .025); for (let i = -.2; i <= .2; i += .13) ctx.strokeRect(size * i, -size * .4, size * .05, size * .7); ctx.restore(); }
